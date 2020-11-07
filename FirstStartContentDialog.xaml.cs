@@ -45,5 +45,19 @@ namespace LiveMusicLite
                     break;
             }
         }
+
+        private void MusicOpenOperationChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string MusicOpenOperation = e.AddedItems[0].ToString();
+            switch (MusicOpenOperation)
+            {
+                case "覆盖掉现在的播放列表":
+                    App.settings.MediaOpenOperation = true;
+                    break;
+                case "加入到现在的播放列表":
+                    App.settings.MediaOpenOperation = false;
+                    break;
+            }
+        }
     }
 }

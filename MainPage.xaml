@@ -5,8 +5,10 @@
     xmlns:local="using:LiveMusicLite"
     xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Windows10FallCreatorsUpdate="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 5)" xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:Windows10FallCreatorsUpdate="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 5)" xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
     mc:Ignorable="d"
+    xmlns:contract5NotPresent="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractNotPresent(Windows.Foundation.UniversalApiContract,4)"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
         <ResourceDictionary>
@@ -46,6 +48,11 @@
                            Orientation="Horizontal"/>
                 </ItemsPanelTemplate>
             </GridView.ItemsPanel>
+            <GridView.ItemContainerTransitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition IsStaggeringEnabled="True" />
+                </TransitionCollection>
+            </GridView.ItemContainerTransitions>
         </GridView>
         <StackPanel x:Name="noneMusicStackPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,40,0,0">
             <TextBlock Text="播放一些音乐吧。" FontSize="30" FontWeight="SemiBold"/>
@@ -111,12 +118,7 @@
 
         <Grid HorizontalAlignment="Stretch" RequestedTheme="Dark" Height="100" VerticalAlignment="Bottom" Grid.Row="1">
             <Grid.Background>
-                <Windows10FallCreatorsUpdate:AcrylicBrush x:Name="musicNowPlayingGridAcrylicBrush"
-                        BackgroundSource="Backdrop"
-                        TintColor="{x:Bind musicInfomation.GridAcrylicBrushColorProperties,Mode=OneWay}"
-                        TintOpacity="0.5"
-                        AlwaysUseFallback="False"
-                    />
+                <SolidColorBrush Color="{ThemeResource SystemAccentColorDark2}"/>
             </Grid.Background>
 
             <Grid.RowDefinitions>
@@ -131,7 +133,7 @@
                 </Style>
             </Grid.Resources>
 
-            <StackPanel Margin="0,8,0,0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top" Orientation="Horizontal" x:Name="mediaControlStackPanel">
+            <StackPanel Margin="0,8,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Orientation="Horizontal" x:Name="mediaControlStackPanel">
                 <ToggleButton x:Name="shuffleMusicToggleButton" ToolTipService.ToolTip="{x:Bind ShufflingMusicProperties,Mode=OneWay}" Click="ShuffleMusic" Content="&#xE14B;" Style="{StaticResource ToggleButtonButtonFontIconStyle}"/>
 
                 <Button x:Name="previousMusicButton" Click="PreviousMusic" Content="&#xE100;" Style="{StaticResource musicControlButtonStyle}" FontSize="20" Width="35" Height="35"/>
@@ -148,10 +150,10 @@
                 <ToggleButton x:Name="repeatMusicButton" ToolTipService.ToolTip="{x:Bind RepeatingMusicProperties,Mode=OneWay}"  IsThreeState="True" Click="RepeatMusic" Content="&#xE1CD;" Style="{StaticResource ToggleButtonButtonFontIconStyle}"/>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="1" Grid.Row="1" x:Name="musicProcessStackPanel" Margin="0,5,0,0">
-                <TextBlock x:Name="musicNowPlayingTimeTextBlock" Text="0:00" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="White"/>
-                <Slider Width="350" Margin="5,0,5,0" x:Name="processSlider" IsThumbToolTipEnabled="False" IsEnabled="False" ValueChanged="processSlider_ValueChanged"/>
-                <TextBlock Text="{x:Bind musicInfomation.MusicLenthProperties,Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="White"/>
+            <StackPanel x:Name="musicProcessStackPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Margin="20,0,0,0" x:Name="musicNowPlayingTimeTextBlock" Text="0:00" Grid.Column="0" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Slider MinWidth="335" HorizontalAlignment="Center" Margin="5,0,5,0" Grid.Column="1" x:Name="processSlider" IsThumbToolTipEnabled="False" ValueChanged="processSlider_ValueChanged" VerticalAlignment="Center"/>
+                <TextBlock Margin="0,0,20,0" Text="{x:Bind musicInfomation.MusicLenthProperties,Mode=OneWay}" Grid.Column="2" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
         <TextBlock x:Name="titleTextBlock" Text="Live Music Lite" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="0" Grid.Row="0" Margin="11,11,0,0"/>

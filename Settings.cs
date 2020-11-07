@@ -32,7 +32,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 指示在手动打开音乐时选择何种操作的值
         /// </summary>
-        string _MediaOpenOperation;
+        bool _MediaOpenOperation;
 
         /// <summary>
         /// 初始化Settings类的新实例
@@ -72,11 +72,11 @@ namespace LiveMusicLite
             switch (localSettings.Values["MediaOpenOperation"])
             {
                 case null:
-                    _MediaOpenOperation = "替换掉正在播放列表";
-                    localSettings.Values["MediaOpenOperation"] = "替换掉正在播放列表";
+                    _MediaOpenOperation = true;
+                    localSettings.Values["MediaOpenOperation"] = true;
                     break;
                 default:
-                    _MediaOpenOperation = (string)localSettings.Values["MediaOpenOperation"];
+                    _MediaOpenOperation = (bool)localSettings.Values["MediaOpenOperation"];
                     break;
             }
         }
@@ -89,6 +89,7 @@ namespace LiveMusicLite
             get => _ThemeSettings;
             set
             {
+                _ThemeSettings = value;
                 localSettings.Values["ThemeSetting"] = value;
             }
         }
@@ -101,6 +102,7 @@ namespace LiveMusicLite
             get => _MusicVolume;
             set
             {
+                _MusicVolume = value;
                 localSettings.Values["MusicVolume"] = value;
             }
         }
@@ -113,6 +115,7 @@ namespace LiveMusicLite
             get => _IsLoadMusicOnStartUp;
             set
             {
+                _IsLoadMusicOnStartUp = value;
                 localSettings.Values["IsLoadMusicOnStartUp"] = value;
             }
         }
@@ -120,11 +123,12 @@ namespace LiveMusicLite
         /// <summary>
         /// 设置中手动打开音乐文件操作的属性
         /// </summary>
-        public string MediaOpenOperation
+        public bool MediaOpenOperation
         {
             get => _MediaOpenOperation;
             set
             {
+                _MediaOpenOperation = value;
                 localSettings.Values["MediaOpenOperation"] = value;
             }
         }

@@ -106,9 +106,6 @@ namespace LiveMusicLite
                 }
                 // 确保当前窗口处于活动状态
                 Window.Current.Activate();
-#if DEBUG
-                //localSettings.Values["FirstStart"] = "FirstStart";
-#endif
                 if ((string)localSettings.Values["FirstStart"] == "FirstStart" || localSettings.Values["FirstStart"] == null)
                 {
                     localSettings.Values["FirstStart"] = "NotFirstStart";

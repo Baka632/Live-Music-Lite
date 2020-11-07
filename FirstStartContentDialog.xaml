@@ -16,5 +16,9 @@
             <x:String>深色</x:String>
             <x:String>使用系统设置</x:String>
         </ComboBox>
+        <ComboBox x:Name="musicOpenOperationComboBox" SelectionChanged="MusicOpenOperationChanged" Margin="0,5,0,5" SelectedItem="覆盖掉现在的播放列表" Header="音乐打开选项">
+            <x:String>覆盖掉现在的播放列表</x:String>
+            <x:String>加入到现在的播放列表</x:String>
+        </ComboBox>
     </StackPanel>
 </ContentDialog>

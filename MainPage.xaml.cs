@@ -600,7 +600,7 @@ namespace LiveMusicLite
         {
             if (e.Parameter is StorageFile file && e.Parameter != null)
             {
-                OpenMusicFile(file,false);
+                OpenMusicFile(file,App.settings.MediaOpenOperation);
             }
             else
             {
