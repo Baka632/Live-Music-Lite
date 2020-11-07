@@ -77,6 +77,10 @@ namespace LiveMusicLite
         /// 声音图标状态的实例
         /// </summary>
         VolumeGlyphState volumeGlyphState = App.volumeGlyphState;
+        /// <summary>
+        /// 磁贴助手的实例
+        /// </summary>
+        TileHelper tileHelper = new TileHelper();
 
         /// <summary>
         /// 指示是否从启动以来第一次添加音乐
@@ -123,7 +127,6 @@ namespace LiveMusicLite
         /// 音乐专辑名称的列表
         /// </summary>
         Dictionary<int, string> MusicAlbumList = new Dictionary<int, string>();
-        ObservableCollection<BitmapImage> bitmapImages = new ObservableCollection<BitmapImage>();
 
         /// <summary>
         /// 初始化MainPage类的新实例
@@ -338,7 +341,7 @@ namespace LiveMusicLite
                 musicInfomation.MusicLenthProperties = MusicLenthList[CurrentItemHashCode];
                 musicInfomation.MusicDurationProperties = MusicDurationList[CurrentItemHashCode];
                 musicInfomation.MusicAlbumProperties = MusicAlbumList[CurrentItemHashCode];
-
+                
                 StorageFile storageFile = await ApplicationData.Current.TemporaryFolder.GetFileAsync($"{AlbumSaveName}.jpg");
                 props = mediaPlaybackItem.GetDisplayProperties();
                 props.Type = Windows.Media.MediaPlaybackType.Music;
@@ -354,6 +357,7 @@ namespace LiveMusicLite
                     processSlider.IsEnabled = true;
                     processSlider.Value = 0;
                     musicNowPlayingTimeTextBlock.Text = "0:00";
+                    SetTileSource();
                     dispatcherTimer.Start();
                 });
             }
@@ -655,7 +659,6 @@ namespace LiveMusicLite
                         await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
                         randomAccessStream.Seek(0);
                         await bitmapImage.SetSourceAsync(randomAccessStream);
-                        bitmapImages.Add(bitmapImage);
                         Image image = new Image
                         {
                             Source = bitmapImage,
@@ -677,7 +680,7 @@ namespace LiveMusicLite
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                TileContent tileContent = new TileContent()
+                var tileContent = new TileContent()
                 {
                     Visual = new TileVisual()
                     {
@@ -790,12 +793,29 @@ namespace LiveMusicLite
                     }
                 };
 
+                tileHelper.ShowTitle(tileContent);
+            });
+        }
+
+        private class TileHelper
+        {
+            /// <summary>
+            /// 显示磁贴
+            /// </summary>
+            /// <param name="tileContent">磁贴源</param>
+            public void ShowTitle(TileContent tileContent)
+            {
                 // Create the tile notification
                 var tileNotif = new TileNotification(tileContent.GetXml());
 
                 // And send the notification to the primary tile
                 TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
-            });
+            }
+
+            /// <summary>
+            /// 删除磁贴
+            /// </summary>
+            public void DeleteTile() => TileUpdateManager.CreateTileUpdaterForApplication().Clear();
         }
     }
 }
