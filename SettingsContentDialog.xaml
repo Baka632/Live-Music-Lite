@@ -1,0 +1,68 @@
+﻿<ContentDialog
+    x:Class="LiveMusicLite.SettingsContentDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LiveMusicLite"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    CloseButtonText="关闭"
+    >
+    <ContentDialog.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <Style TargetType="Image" x:Key="GithubImage">
+                        <Setter Property="Source" Value="/Assets/GitHub-Mark-32px.png"/>
+                    </Style>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <Style TargetType="Image" x:Key="GithubImage">
+                        <Setter Property="Source" Value="/Assets/Github-Mark-Light-32px.png"/>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </ContentDialog.Resources>
+
+
+    <Grid>
+        <Pivot>
+            <PivotItem Header="设置">
+                <StackPanel>
+                    <ComboBox x:Name="themeComboBox" SelectionChanged="ThemeChanged" Margin="0,5,0,5" SelectedItem="{x:Bind ThemeSettingProperty,Mode=OneWay}" Header="主题设置">
+                        <x:String>浅色</x:String>
+                        <x:String>深色</x:String>
+                        <x:String>使用系统设置</x:String>
+                    </ComboBox>
+                    <StackPanel Orientation="Horizontal" x:Name="restartStackPanel" Visibility="Collapsed">
+                        <TextBlock Text="必须重新启动应用才能应用主题更改" Margin="0,0,5,0" Style="{StaticResource BaseTextBlockStyle}" Foreground="DarkRed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Button Content="重新启动应用" Click="RestartApp" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <ComboBox x:Name="musicOpenOperationComboBox" SelectionChanged="MusicOpenOperationChanged" Margin="0,5,0,5" SelectedItem="{x:Bind MusicOpenOperationStringProperty,Mode=OneWay}" Header="音乐打开选项">
+                        <x:String>覆盖掉现在的播放列表</x:String>
+                        <x:String>加入到现在的播放列表</x:String>
+                    </ComboBox>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="关于">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Height="110" Width="110" Source="/Assets/Live Music Lite Light.png" Stretch="UniformToFill"/>
+                        <StackPanel Margin="10,0,0,0">
+                            <TextBlock Text="Live Music Lite" Style="{StaticResource BaseTextBlockStyle}"/>
+                            <TextBlock Text="{x:Bind AppVersionProperty}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <Button Click="MailTo" ToolTipService.ToolTip="邮箱" Margin="0,0,5,0" Content="&#xE119;" FontSize="20" FontFamily="Segoe MDL2 Assets" Background="Transparent" Height="40" Width="40"/>
+                                <Button Click="GoToGithub" ToolTipService.ToolTip="Github" Background="Transparent" Height="40" Width="40">
+                                    <Image Style="{ThemeResource GithubImage}" Stretch="UniformToFill" Width="19" Height="19"/>
+                                </Button>
+                            </StackPanel>
+                            <HyperlinkButton Content="隐私声明" NavigateUri="https://github.com/Baka632/LiveStudioPrivacyStatement/blob/main/PrivacyStatement.md"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</ContentDialog>

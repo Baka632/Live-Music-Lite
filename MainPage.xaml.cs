@@ -817,5 +817,11 @@ namespace LiveMusicLite
             /// </summary>
             public void DeleteTile() => TileUpdateManager.CreateTileUpdaterForApplication().Clear();
         }
+
+        private async void ShowSettings(object sender, RoutedEventArgs e)
+        {
+            SettingsContentDialog settingsContentDialog = new SettingsContentDialog();
+            await settingsContentDialog.ShowAsync();
+        }
     }
 }
