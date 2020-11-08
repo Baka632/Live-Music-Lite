@@ -638,36 +638,40 @@ namespace LiveMusicLite
 
         private async void GetMusicImages()
         {
+            int x = 0;
             StorageFolder musicFolder = KnownFolders.MusicLibrary;
             IReadOnlyList<StorageFile> list = await musicFolder.GetFilesAsync(CommonFileQuery.OrderByName);
             List<string> albumList = new List<string>();
-            for (int i = 0; i < list.Count; i++)
+            for (int i = 0; i < list.Count; x++)
             {
-                if (i == 420)
+                if (i == 72)
                 {
                     break;
                 }
                 else
                 {
                     BitmapImage bitmapImage = new BitmapImage();
-                    InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream();
-                    MusicProperties musicProperties = await list[i].Properties.GetMusicPropertiesAsync();
-                    if (albumList.Contains(musicProperties.Album) == false && list[i].ContentType == "audio/mpeg" || list[i].ContentType == "audio/x-wav")
+                    using (InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream())
                     {
-                        StorageFile file = list[i];
-                        var thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
-                        await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
-                        randomAccessStream.Seek(0);
-                        await bitmapImage.SetSourceAsync(randomAccessStream);
-                        Image image = new Image
+                        MusicProperties musicProperties = await list[x].Properties.GetMusicPropertiesAsync();
+                        if (albumList.Contains(musicProperties.Album) == false && list[x].ContentType == "audio/mpeg" || list[x].ContentType == "audio/x-wav")
                         {
-                            Source = bitmapImage,
-                            Stretch = Stretch.UniformToFill,
-                            Height = 100,
-                            Width = 100,
-                        };
-                        backgroundImagesGridView.Items.Add(image);
-                        albumList.Add(musicProperties.Album);
+                            StorageFile file = list[x];
+                            var thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
+                            await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
+                            randomAccessStream.Seek(0);
+                            await bitmapImage.SetSourceAsync(randomAccessStream);
+                            Image image = new Image
+                            {
+                                Source = bitmapImage,
+                                Stretch = Stretch.UniformToFill,
+                                Height = 100,
+                                Width = 100,
+                            };
+                            backgroundImagesGridView.Items.Add(image);
+                            albumList.Add(musicProperties.Album);
+                            i++;
+                        }
                     }
                 }
             }
