@@ -53,10 +53,7 @@ namespace LiveMusicLite
         /// 计时器DispatcherTimer的实例
         /// </summary>
         public static DispatcherTimer dispatcherTimer;
-        /// <summary>
-        /// 从文件读取的音乐属性
-        /// </summary>
-        MusicProperties musicProperties;
+        
         /// <summary>
         /// 新的进度条值
         /// </summary>
@@ -99,34 +96,31 @@ namespace LiveMusicLite
         /// </summary>
         string ShufflingMusicState = "随机播放:关";
 
-        /// <summary>
-        /// 音乐艺术家的列表
-        /// </summary>
-        Dictionary<int, string> MusicArtistList = new Dictionary<int, string>();
-        /// <summary>
-        /// 音乐标题的列表
-        /// </summary>
-        Dictionary<int, string> MusicTitleList = new Dictionary<int, string>();
+        ///// <summary>
+        ///// 音乐艺术家的列表
+        ///// </summary>
+        //Dictionary<int, string> MusicArtistList = new Dictionary<int, string>();
+        ///// <summary>
+        ///// 音乐标题的列表
+        ///// </summary>
+        //Dictionary<int, string> MusicTitleList = new Dictionary<int, string>();
         /// <summary>
         /// 音乐缩略图的列表
         /// </summary>
         Dictionary<int, BitmapImage> MusicImageList = new Dictionary<int, BitmapImage>();
-        /// <summary>
-        /// 音乐缩略图主题色的列表
-        /// </summary>
-        Dictionary<int, Color> MusicGirdColorsList = new Dictionary<int, Color>();
-        /// <summary>
-        /// 音乐长度的列表
-        /// </summary>
-        Dictionary<int, string> MusicLenthList = new Dictionary<int, string>();
-        /// <summary>
-        /// 音乐实际长度的列表(未被转换为string)
-        /// </summary>
-        Dictionary<int, double> MusicDurationList = new Dictionary<int, double>();
-        /// <summary>
-        /// 音乐专辑名称的列表
-        /// </summary>
-        Dictionary<int, string> MusicAlbumList = new Dictionary<int, string>();
+        ///// <summary>
+        ///// 音乐长度的列表
+        ///// </summary>
+        //Dictionary<int, string> MusicLenthList = new Dictionary<int, string>();
+        ///// <summary>
+        ///// 音乐实际长度的列表(未被转换为string)
+        ///// </summary>
+        //Dictionary<int, double> MusicDurationList = new Dictionary<int, double>();
+        ///// <summary>
+        ///// 音乐专辑名称的列表
+        ///// </summary>
+        //Dictionary<int, string> MusicAlbumList = new Dictionary<int, string>();
+        Dictionary<int, MusicProperties> MusicPropertyList = new Dictionary<int, MusicProperties>();
 
         /// <summary>
         /// 初始化MainPage类的新实例
@@ -335,12 +329,12 @@ namespace LiveMusicLite
             {
                 int CurrentItemHashCode = musicService.mediaPlaybackList.CurrentItem.GetHashCode();
 
-                musicInfomation.MusicAlbumArtistProperties = MusicArtistList[CurrentItemHashCode];
-                musicInfomation.MusicTitleProperties = MusicTitleList[CurrentItemHashCode];
+                musicInfomation.MusicAlbumArtistProperties = MusicPropertyList[CurrentItemHashCode].Artist;
+                musicInfomation.MusicTitleProperties = MusicPropertyList[CurrentItemHashCode].Title;
                 musicInfomation.MusicImageProperties = MusicImageList[CurrentItemHashCode];
-                musicInfomation.MusicLenthProperties = MusicLenthList[CurrentItemHashCode];
-                musicInfomation.MusicDurationProperties = MusicDurationList[CurrentItemHashCode];
-                musicInfomation.MusicAlbumProperties = MusicAlbumList[CurrentItemHashCode];
+                musicInfomation.MusicLenthProperties = MusicPropertyList[CurrentItemHashCode].Duration.ToString(@"m\:ss");
+                musicInfomation.MusicDurationProperties = MusicPropertyList[CurrentItemHashCode].Duration.TotalSeconds;
+                musicInfomation.MusicAlbumProperties = MusicPropertyList[CurrentItemHashCode].Album;
                 
                 StorageFile storageFile = await ApplicationData.Current.TemporaryFolder.GetFileAsync($"{AlbumSaveName}.jpg");
                 props = mediaPlaybackItem.GetDisplayProperties();
@@ -504,33 +498,23 @@ namespace LiveMusicLite
 
             int mediaPlayBackItemHashCode = mediaPlaybackItem.GetHashCode();
 
-            musicProperties = await file.Properties.GetMusicPropertiesAsync();
-            if (string.IsNullOrWhiteSpace(musicProperties.Artist) != true)
+            MusicProperties musicProperties = await file.Properties.GetMusicPropertiesAsync();
+            if (string.IsNullOrWhiteSpace(musicProperties.Artist) == true)
             {
-                MusicArtistList.Add(mediaPlayBackItemHashCode, musicProperties.AlbumArtist);
-            }
-            else
-            {
-                MusicArtistList.Add(mediaPlayBackItemHashCode, "未知艺术家");
+                musicProperties.Artist = "未知艺术家";
             }
 
-            if (string.IsNullOrWhiteSpace(musicProperties.Title) != true)
+            if (string.IsNullOrWhiteSpace(musicProperties.Title) == true)
             {
-                MusicTitleList.Add(mediaPlayBackItemHashCode, musicProperties.Title);
-            }
-            else
-            {
-                MusicTitleList.Add(mediaPlayBackItemHashCode, file.Name);
+                musicProperties.Album = file.Name;
             }
 
-            if (string.IsNullOrWhiteSpace(musicProperties.Album) != true)
+            if (string.IsNullOrWhiteSpace(musicProperties.Album) == true)
             {
-                MusicAlbumList.Add(mediaPlayBackItemHashCode, musicProperties.Album);
+                musicProperties.Album = "未知专辑";
             }
-            else
-            {
-                MusicAlbumList.Add(mediaPlayBackItemHashCode, "未知专辑");
-            }
+
+            MusicPropertyList.Add(mediaPlayBackItemHashCode, musicProperties);
 
             BitmapImage bitmapImage = new BitmapImage();
             using (InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream())
@@ -540,8 +524,6 @@ namespace LiveMusicLite
                 randomAccessStream.Seek(0);
                 await bitmapImage.SetSourceAsync(randomAccessStream);
                 MusicImageList.Add(mediaPlayBackItemHashCode, bitmapImage);
-                MusicLenthList.Add(mediaPlayBackItemHashCode, musicProperties.Duration.ToString(@"m\:ss"));
-                MusicDurationList.Add(mediaPlayBackItemHashCode, musicProperties.Duration.TotalSeconds);
 
                 if (IsFirstTimeAddMusic == true)
                 {
@@ -627,13 +609,13 @@ namespace LiveMusicLite
         private void ResetMusicPropertiesList()
         {
             musicInfomation.ResetAllMusicProperties();
-            MusicGirdColorsList.Clear();
-            MusicArtistList.Clear();
+            MusicPropertyList.Clear();
+            //MusicArtistList.Clear();
             MusicImageList.Clear();
-            MusicTitleList.Clear();
-            MusicLenthList.Clear();
-            MusicDurationList.Clear();
-            MusicAlbumList.Clear();
+            //MusicTitleList.Clear();
+            //MusicLenthList.Clear();
+            //MusicDurationList.Clear();
+            //MusicAlbumList.Clear();
         }
 
         private async void GetMusicImages()
@@ -658,7 +640,7 @@ namespace LiveMusicLite
                         {
                             StorageFile file = list[x];
                             var thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
-                            await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
+                            _ = await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
                             randomAccessStream.Seek(0);
                             await bitmapImage.SetSourceAsync(randomAccessStream);
                             Image image = new Image
