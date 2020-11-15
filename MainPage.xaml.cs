@@ -325,7 +325,7 @@ namespace LiveMusicLite
                 musicInfomation.MusicAlbumProperties = MusicPropertiesList[CurrentItemIndex].Album;
 
                 StorageFile storageFile = await ApplicationData.Current.TemporaryFolder.GetFileAsync($"{musicInfomation.MusicAlbumProperties.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty)}.jpg");
-                props = musicService.mediaPlaybackList.CurrentItem.GetDisplayProperties();
+                props = mediaPlaybackItem.GetDisplayProperties();
                 props.Type = Windows.Media.MediaPlaybackType.Music;
                 props.MusicProperties.AlbumTitle = musicInfomation.MusicAlbumProperties;
                 props.MusicProperties.AlbumArtist = musicInfomation.MusicAlbumArtistProperties;
@@ -334,7 +334,7 @@ namespace LiveMusicLite
                 props.MusicProperties.AlbumTrackCount = MusicPropertiesList[CurrentItemIndex].TrackNumber;
                 props.MusicProperties.TrackNumber = MusicPropertiesList[CurrentItemIndex].TrackNumber;
                 props.Thumbnail = RandomAccessStreamReference.CreateFromFile(storageFile);
-                musicService.mediaPlaybackList.CurrentItem.ApplyDisplayProperties(props);
+                mediaPlaybackItem.ApplyDisplayProperties(props);
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -361,7 +361,7 @@ namespace LiveMusicLite
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StopMusic(object sender, RoutedEventArgs e)
+        private void StopMusic(object sender = null, RoutedEventArgs e = null)
         {
             TotalIndex = 0;
             musicProcessStackPanel.Visibility = Visibility.Collapsed;
@@ -424,6 +424,7 @@ namespace LiveMusicLite
             {
                 if (fileList.Count > 0)
                 {
+                    TotalIndex = 0;
                     ResetMusicPropertiesList();
                     if (musicService.mediaPlaybackList.Items != null)
                     {
