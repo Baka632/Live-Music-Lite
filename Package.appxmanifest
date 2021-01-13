@@ -10,7 +10,7 @@
   <Identity
     Name="15fba3ac-522c-407d-a012-2c9164746da0"
     Publisher="CN=Baka632"
-    Version="1.0.2.0" />
+    Version="1.0.3.0" />
 
   <mp:PhoneIdentity PhoneProductId="15fba3ac-522c-407d-a012-2c9164746da0" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

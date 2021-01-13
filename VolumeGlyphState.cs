@@ -10,12 +10,8 @@ namespace LiveMusicLite
     public class VolumeGlyphState : DependencyObject, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private readonly FontIcon MuteIcon = new FontIcon { FontFamily = new Windows.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"), Glyph = "\uE198", FontSize = 16 };
-        private readonly FontIcon Volume0Icon = new FontIcon { FontFamily = new Windows.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"), Glyph = "\uE992", FontSize = 16 };
-        private readonly FontIcon Volume1Icon = new FontIcon { FontFamily = new Windows.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"), Glyph = "\uE993", FontSize = 16 };
-        private readonly FontIcon Volume2Icon = new FontIcon { FontFamily = new Windows.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"), Glyph = "\uE994", FontSize = 16 };
-        private readonly FontIcon Volume3Icon = new FontIcon { FontFamily = new Windows.UI.Xaml.Media.FontFamily("Segoe MDL2 Assets"), Glyph = "\uE995", FontSize = 16 };
-        private FontIcon _volumeGlyph;
+
+        private string _volumeGlyph;
 
         MusicInfomation musicInfomation = App.musicInfomation;
         MusicService musicService = App.musicService;
@@ -32,7 +28,7 @@ namespace LiveMusicLite
             switch (musicService.mediaPlayer.IsMuted)
             {
                 case true:
-                    VolumeGlyph = MuteIcon;
+                    VolumeGlyph = "\uE198";
                     break;
                 case false:
                     ChangeVolumeGlyph();
@@ -53,19 +49,19 @@ namespace LiveMusicLite
             double MediaPlayerVolume = musicInfomation.MusicVolumeProperties;
             if (MediaPlayerVolume > 0.6)
             {
-                VolumeGlyph = Volume3Icon;
+                VolumeGlyph = "\uE995";
             }
             else if (MediaPlayerVolume > 0.3 && MediaPlayerVolume < 0.6)
             {
-                VolumeGlyph = Volume2Icon;
+                VolumeGlyph = "\uE994";
             }
             else if (MediaPlayerVolume > 0 && MediaPlayerVolume < 0.3)
             {
-                VolumeGlyph = Volume1Icon;
+                VolumeGlyph = "\uE993";
             }
             else if (MediaPlayerVolume == 0)
             {
-                VolumeGlyph = Volume0Icon;
+                VolumeGlyph = "\uE992";
             }
         }
 
@@ -81,7 +77,7 @@ namespace LiveMusicLite
             });
         }
 
-        public FontIcon VolumeGlyph
+        public string VolumeGlyph
         {
             get => _volumeGlyph;
             set

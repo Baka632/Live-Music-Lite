@@ -135,9 +135,6 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainPageMobile.xaml.cs">
-      <DependentUpon>MainPageMobile.xaml</DependentUpon>
-    </Compile>
     <Compile Include="MusicInfomation.cs" />
     <Compile Include="MusicService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -222,7 +219,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MainPageMobile.xaml">
+    <Page Include="MainPage.devicefamily-mobile.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
