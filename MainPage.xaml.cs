@@ -50,7 +50,7 @@ namespace LiveMusicLite
         /// 计时器DispatcherTimer的实例
         /// </summary>
         public static DispatcherTimer dispatcherTimer;
-        
+
         /// <summary>
         /// 新的进度条值
         /// </summary>
@@ -454,11 +454,15 @@ namespace LiveMusicLite
         /// 播放音乐,以及获取音乐的属性
         /// </summary>
         /// <param name="file">传入的音乐文件</param>
-        private void PlayAndGetMusicProperites(IReadOnlyList<StorageFile> fileList)
+        private async void PlayAndGetMusicProperites(IReadOnlyList<StorageFile> fileList)
         {
             backgroundImagesGridView.Visibility = Visibility.Collapsed;
             noneMusicStackPanel.Visibility = Visibility.Collapsed;
 
+            await Task.Run(() =>
+            {
+                GetProps(fileList);
+            });
             if (IsFirstTimeAddMusic == true)
             {
                 musicService.mediaPlayer.Source = musicService.mediaPlaybackList;
@@ -466,65 +470,70 @@ namespace LiveMusicLite
                 ChangeMusicControlButtonsUsableState();
                 IsFirstTimeAddMusic = false;
             }
-            if (musicService.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.None || musicService.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
+
+            async void GetProps(IReadOnlyList<StorageFile> fileList1)
             {
-                musicService.mediaPlayer.Play();
-            }
-
-            for (int i = 0; i < fileList.Count; i++)
-            {
-                StorageFile file = fileList[i];
-
-                Task<MusicProperties> musicPropertiesTask = file.Properties.GetMusicPropertiesAsync().AsTask();
-                musicPropertiesTask.Wait();
-                MusicProperties musicProperties = musicPropertiesTask.Result;
-
-                if (string.IsNullOrWhiteSpace(musicProperties.Artist) == true)
+                for (int i = 0; i < fileList1.Count; i++)
                 {
-                    musicProperties.AlbumArtist = "未知艺术家";
+                    StorageFile file = fileList1[i];
+
+                    Task<MusicProperties> musicPropertiesTask = file.Properties.GetMusicPropertiesAsync().AsTask();
+                    musicPropertiesTask.Wait();
+                    MusicProperties musicProperties = musicPropertiesTask.Result;
+
+                    if (string.IsNullOrWhiteSpace(musicProperties.Artist) == true)
+                    {
+                        musicProperties.AlbumArtist = "未知艺术家";
+                    }
+
+                    if (string.IsNullOrWhiteSpace(musicProperties.Title) == true)
+                    {
+                        musicProperties.Title = file.Name;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(musicProperties.Album) == true)
+                    {
+                        musicProperties.Album = "未知专辑";
+                    }
+
+                    MusicPropertiesList.Add(musicProperties);
+
+                    Task<StorageItemThumbnail> musicThumbnailTask = file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem).AsTask();
+                    musicThumbnailTask.Wait();
+
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        BitmapImage bitmapImage = new BitmapImage();
+                        bitmapImage.SetSource(musicThumbnailTask.Result);
+                        MusicImageList.Add(bitmapImage);
+                    });
+
+                    string AlbumSaveName = musicProperties.Album;
+                    AlbumSaveName = AlbumSaveName.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
+
+                    Task task = new Task(async () =>
+                    {
+                        if (!File.Exists($"{ApplicationData.Current.TemporaryFolder.Path}\\{AlbumSaveName}.jpg"))
+                        {
+                            StorageFile storageFile = await ApplicationData.Current.TemporaryFolder.CreateFileAsync($"{AlbumSaveName}.jpg", CreationCollisionOption.OpenIfExists);
+                            var fileStream = await storageFile.OpenStreamForWriteAsync();
+                            await WindowsRuntimeStreamExtensions.AsStreamForRead(musicThumbnailTask.Result.GetInputStreamAt(0)).CopyToAsync(fileStream);
+                            fileStream.Dispose();
+                        }
+                    });
+                    task.Start();
+                    task.Wait();
+
+                    MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(fileList1[i]));
+                    MediaItemDisplayProperties props = mediaPlaybackItem.GetDisplayProperties();
+                    props.Type = Windows.Media.MediaPlaybackType.Music;
+                    props.MusicProperties.Title = musicProperties.Title;
+                    props.MusicProperties.Artist = musicProperties.Artist;
+                    props.MusicProperties.AlbumTitle = musicProperties.AlbumArtist;
+                    props.Thumbnail = RandomAccessStreamReference.CreateFromStream(musicThumbnailTask.Result);
+                    mediaPlaybackItem.ApplyDisplayProperties(props);
+                    musicService.mediaPlaybackList.Items.Add(mediaPlaybackItem);
                 }
-
-                if (string.IsNullOrWhiteSpace(musicProperties.Title) == true)
-                {
-                    musicProperties.Title = file.Name;
-                }
-
-                if (string.IsNullOrWhiteSpace(musicProperties.Album) == true)
-                {
-                    musicProperties.Album = "未知专辑";
-                }
-
-                MusicPropertiesList.Add(musicProperties);
-
-                Task<StorageItemThumbnail> musicThumbnailTask = file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem).AsTask();
-                musicThumbnailTask.Wait();
-
-                BitmapImage bitmapImage = new BitmapImage();
-                bitmapImage.SetSource(musicThumbnailTask.Result);
-
-                MusicImageList.Add(bitmapImage);
-
-                string AlbumSaveName = musicProperties.Album;
-                AlbumSaveName = AlbumSaveName.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
-
-                Task task = new Task(async () =>
-                {
-                    var fileStream = File.Create($"{ApplicationData.Current.TemporaryFolder.Path}\\{AlbumSaveName}.jpg");
-                    await WindowsRuntimeStreamExtensions.AsStreamForRead(musicThumbnailTask.Result.GetInputStreamAt(0)).CopyToAsync(fileStream);
-                    fileStream.Dispose();
-                });
-                task.Start();
-                task.Wait();
-
-                MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(fileList[i]));
-                MediaItemDisplayProperties props = mediaPlaybackItem.GetDisplayProperties();
-                props.Type = Windows.Media.MediaPlaybackType.Music;
-                props.MusicProperties.Title = musicProperties.Title;
-                props.MusicProperties.Artist = musicProperties.Artist;
-                props.MusicProperties.AlbumTitle = musicProperties.AlbumArtist;
-                props.Thumbnail = RandomAccessStreamReference.CreateFromStream(musicThumbnailTask.Result);
-                mediaPlaybackItem.ApplyDisplayProperties(props);
-                musicService.mediaPlaybackList.Items.Add(mediaPlaybackItem);
             }
         }
 
@@ -572,7 +581,7 @@ namespace LiveMusicLite
         {
             if (e.Parameter is IReadOnlyList<StorageFile> file && e.Parameter != null)
             {
-                OpenMusicFile(file,App.settings.MediaOpenOperation);
+                OpenMusicFile(file, App.settings.MediaOpenOperation);
             }
             else
             {
@@ -593,26 +602,19 @@ namespace LiveMusicLite
 
         private async void GetMusicImages()
         {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            int x = 0;
+            StorageFolder musicFolder = KnownFolders.MusicLibrary;
+            List<Image> images = new List<Image>();
+            List<StorageFile> list =
+                (
+                    from StorageFile file
+                    in await musicFolder.GetFilesAsync(CommonFileQuery.OrderByName)
+                    where file.ContentType == "audio/mpeg" || file.ContentType == "audio/x-wav"
+                    select file
+                ).AsParallel().ToList();
+            List<string> albumList = new List<string>();
+            await Task.Run(async () =>
             {
-                int x = 0;
-                StorageFolder musicFolder = KnownFolders.MusicLibrary;
-#if DEBUG
-                System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-                stopwatch.Start();
-#endif
-                List<StorageFile> list = 
-                    (
-                        from StorageFile file
-                        in await musicFolder.GetFilesAsync(CommonFileQuery.OrderByName)
-                        where file.ContentType == "audio/mpeg" || file.ContentType == "audio/x-wav"
-                        select file
-                    ).AsParallel().ToList();
-#if DEBUG
-                stopwatch.Stop();
-                System.Diagnostics.Debug.WriteLine($"The time cost of the PLINQ is {stopwatch.ElapsedMilliseconds}(ms)");
-#endif
-                List<string> albumList = new List<string>();
                 for (int i = 0; i < list.Count(); x++)
                 {
                     if (i == 20 && Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Mobile")
@@ -625,7 +627,6 @@ namespace LiveMusicLite
                     }
                     else
                     {
-                        BitmapImage bitmapImage = new BitmapImage();
                         using (InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream())
                         {
                             MusicProperties musicProperties = await list[x].Properties.GetMusicPropertiesAsync();
@@ -633,24 +634,29 @@ namespace LiveMusicLite
                             {
                                 StorageFile file = list[x];
                                 var thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
-                                _ = await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
+                                await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
                                 randomAccessStream.Seek(0);
-                                await bitmapImage.SetSourceAsync(randomAccessStream);
-                                Image image = new Image
-                                {
-                                    Source = bitmapImage,
-                                    Stretch = Stretch.UniformToFill,
-                                    Height = 100,
-                                    Width = 100,
-                                };
-                                backgroundImagesGridView.Items.Add(image);
-                                albumList.Add(musicProperties.Album);
+                                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                                 {
+                                     BitmapImage bitmapImage = new BitmapImage();
+                                     await bitmapImage.SetSourceAsync(randomAccessStream);
+                                     Image image = new Image
+                                     {
+                                         Source = bitmapImage,
+                                         Stretch = Stretch.UniformToFill,
+                                         Height = 100,
+                                         Width = 100,
+                                     };
+                                     images.Add(image);
+                                     albumList.Add(musicProperties.Album);
+                                 });
                                 i++;
                             }
                         }
                     }
                 }
             });
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => backgroundImagesGridView.ItemsSource = images);
         }
 
         /// <summary>

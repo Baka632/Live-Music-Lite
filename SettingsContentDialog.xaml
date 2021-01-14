@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     CloseButtonText="关闭"
+    Loaded="ContentDialog_Loaded"
     >
     <ContentDialog.Resources>
         <ResourceDictionary>
@@ -43,6 +44,13 @@
                         <x:String>覆盖掉现在的播放列表</x:String>
                         <x:String>加入到现在的播放列表</x:String>
                     </ComboBox>
+                    <StackPanel Margin="0,10,0,0">
+                        <TextBlock Margin="0,0,0,5" Text="{x:Bind TempFolderSize,Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Click="ClearTempFolder" Content="清空缓存"/>
+                            <ProgressRing x:Name="clearProgreeRing" IsActive="False" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
             </PivotItem>
             <PivotItem Header="关于">
