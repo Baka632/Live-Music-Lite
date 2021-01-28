@@ -47,10 +47,6 @@ namespace LiveMusicLite
         /// 音乐缩略图,默认值为null
         /// </summary>
         BitmapImage MusicImage = null;
-        /// <summary>
-        /// 音乐缩略图主题色,默认值为系统资源'SystemAccentColorDark2'所定义的值
-        /// </summary>
-        Color MusicNowPlayingGridAcrylicBrushColor = (Color)Application.Current.Resources["SystemAccentColorDark2"];
 
         /// <summary>
         /// 初始化MusicInfomation的新实例
@@ -144,19 +140,6 @@ namespace LiveMusicLite
             set
             {
                 MusicImage = value;
-                OnPropertiesChanged();
-            }
-        }
-
-        /// <summary>
-        /// 音乐缩略图的主题色属性,此属性将被musicNowPlayingGrid控件作为其亚克力画笔的颜色
-        /// </summary>
-        public Color GridAcrylicBrushColorProperties
-        {
-            get => MusicNowPlayingGridAcrylicBrushColor;
-            set
-            {
-                MusicNowPlayingGridAcrylicBrushColor = value;
                 OnPropertiesChanged();
             }
         }

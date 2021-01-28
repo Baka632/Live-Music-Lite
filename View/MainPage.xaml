@@ -9,7 +9,8 @@
     xmlns:Windows10FallCreatorsUpdate="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 5)" 
     xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded">
     <Page.Resources>
         <ResourceDictionary>
             <Style TargetType="Button" x:Key="ButtonFontIconStyle" BasedOn="{StaticResource ButtonRevealStyle}">
@@ -176,7 +177,7 @@
             <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
 
-        <GridView Opacity="0.4" animations:ReorderGridAnimation.Duration="500" IsItemClickEnabled="False" x:Name="backgroundImagesGridView" Padding="0" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Hidden">
+        <GridView ItemsSource="{x:Bind musicImages,Mode=OneWay}" Opacity="0.4" animations:ReorderGridAnimation.Duration="500" IsItemClickEnabled="False" x:Name="backgroundImagesGridView" Padding="0" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Hidden">
             <GridView.ItemContainerStyle>
                 <Style TargetType="GridViewItem">
                     <Setter Property="IsEnabled" Value="False"/>
@@ -188,12 +189,8 @@
                            Orientation="Horizontal"/>
                 </ItemsPanelTemplate>
             </GridView.ItemsPanel>
-            <GridView.ItemContainerTransitions>
-                <TransitionCollection>
-                    <EntranceThemeTransition IsStaggeringEnabled="True" />
-                </TransitionCollection>
-            </GridView.ItemContainerTransitions>
         </GridView>
+        
         <StackPanel x:Name="noneMusicStackPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,40,0,0">
             <TextBlock Text="播放一些音乐吧。" FontSize="30" FontWeight="SemiBold"/>
             <Button Margin="0,10,0,0" Click="OpenMusicFile">
@@ -281,8 +278,8 @@
 
                 <Button x:Name="pausePlayingButton" ToolTipService.ToolTip="{x:Bind NowPlayingProperties,Mode=OneWay}" FontSize="27" Content="&#xE102;" Click="PlayPauseMusic" Margin="6,0,6,0" Style="{StaticResource musicControlButtonStyle}" BorderBrush="#9f9f9f" BorderThickness="2">
                     <Windows10FallCreatorsUpdate:Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="None" Key="Space"/>
-                        <KeyboardAccelerator Modifiers="Control" Key="P"/>
+                        <Windows10FallCreatorsUpdate:KeyboardAccelerator Modifiers="None" Key="Space"/>
+                        <Windows10FallCreatorsUpdate:KeyboardAccelerator Modifiers="Control" Key="P"/>
                     </Windows10FallCreatorsUpdate:Button.KeyboardAccelerators>
                 </Button>
                 <Button x:Name="nextMusicButton" Click="NextMusic" Margin="0,0,5,0" Content="&#xE101;" Style="{StaticResource musicControlButtonStyle}" FontSize="20" Width="35" Height="35"/>

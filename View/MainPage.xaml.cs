@@ -27,6 +27,7 @@ using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using System.Threading.Tasks;
+using Id3;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -50,6 +51,10 @@ namespace LiveMusicLite
         /// 计时器DispatcherTimer的实例
         /// </summary>
         public static DispatcherTimer dispatcherTimer;
+        /// <summary>
+        /// 在主界面上显示的音乐图片的列表
+        /// </summary>
+        ObservableCollection<Image> musicImages = new ObservableCollection<Image>();
 
         /// <summary>
         /// 新的进度条值
@@ -86,14 +91,6 @@ namespace LiveMusicLite
         string ShufflingMusicState = "随机播放:关";
 
         /// <summary>
-        /// 音乐缩略图的列表
-        /// </summary>
-        List<BitmapImage> MusicImageList = new List<BitmapImage>();
-        /// <summary>
-        /// 音乐属性的列表
-        /// </summary>
-        List<MusicProperties> MusicPropertiesList = new List<MusicProperties>();
-        /// <summary>
         /// 支持的音频格式数组
         /// </summary>
         private static string[] supportedAudioFormats = new string[]
@@ -112,6 +109,7 @@ namespace LiveMusicLite
 
             musicService.mediaPlaybackList.CurrentItemChanged += MediaPlaybackList_CurrentItemChanged;
             musicService.mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
+            musicService.mediaPlayer.PlaybackSession.NaturalDurationChanged += PlaybackSession_NaturalDurationChanged;
             mediaControlStackPanel.Visibility = Visibility.Collapsed;
             musicProcessStackPanel.Visibility = Visibility.Collapsed;
 
@@ -123,7 +121,12 @@ namespace LiveMusicLite
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             processSlider.AddHandler(PointerReleasedEvent /*哪个事件*/, new PointerEventHandler(UIElement_OnPointerReleased) /*使用哪个函数处理*/, true /*如果在之前处理，是否还使用函数*/);
             processSlider.AddHandler(PointerPressedEvent /*哪个事件*/, new PointerEventHandler(UIElement_EnterPressedReleased) /*使用哪个函数处理*/, true /*如果在之前处理，是否还使用函数*/);
-            Task GetMusicTask = Task.Run(() => GetMusicImages());
+        }
+
+        private void PlaybackSession_NaturalDurationChanged(MediaPlaybackSession sender, object args)
+        {
+            musicInfomation.MusicLenthProperties = sender.NaturalDuration.ToString(@"m\:ss");
+            musicInfomation.MusicDurationProperties = sender.NaturalDuration.TotalSeconds;
         }
 
         /// <summary>
@@ -306,18 +309,19 @@ namespace LiveMusicLite
         {
             if (musicService.mediaPlaybackList.CurrentItem != null)
             {
-                int CurrentItemIndex = (int)musicService.mediaPlaybackList.CurrentItemIndex;
+                Windows.Media.MusicDisplayProperties currentMusicInfomation = musicService.mediaPlaybackList.CurrentItem.GetDisplayProperties().MusicProperties;
+                RandomAccessStreamReference CurrentItemMusicThumbnail = sender.CurrentItem.GetDisplayProperties().Thumbnail;
+                IRandomAccessStream musicThumbnail = await CurrentItemMusicThumbnail.OpenReadAsync();
 
-                musicInfomation.MusicAlbumArtistProperties = MusicPropertiesList[CurrentItemIndex].AlbumArtist;
-                musicInfomation.MusicTitleProperties = MusicPropertiesList[CurrentItemIndex].Title;
-                musicInfomation.MusicImageProperties = MusicImageList[CurrentItemIndex];
-                musicInfomation.MusicLenthProperties = MusicPropertiesList[CurrentItemIndex].Duration.ToString(@"m\:ss");
-                musicInfomation.MusicDurationProperties = MusicPropertiesList[CurrentItemIndex].Duration.TotalSeconds;
-                musicInfomation.MusicAlbumProperties = MusicPropertiesList[CurrentItemIndex].Album;
-
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                musicInfomation.MusicAlbumArtistProperties = currentMusicInfomation.AlbumArtist;
+                musicInfomation.MusicTitleProperties = currentMusicInfomation.Title;
+                musicInfomation.MusicAlbumProperties = currentMusicInfomation.AlbumTitle;
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                 {
-                    processSlider.Maximum = musicInfomation.MusicDurationProperties;
+                    BitmapImage image = new BitmapImage();
+                    await image.SetSourceAsync(musicThumbnail);
+                    musicInfomation.MusicImageProperties = image;
+
                     processSlider.IsEnabled = true;
                     processSlider.Value = 0;
                     musicNowPlayingTimeTextBlock.Text = "0:00";
@@ -459,10 +463,7 @@ namespace LiveMusicLite
             backgroundImagesGridView.Visibility = Visibility.Collapsed;
             noneMusicStackPanel.Visibility = Visibility.Collapsed;
 
-            await Task.Run(() =>
-            {
-                GetProps(fileList);
-            });
+            await Task.Run(() => GetProps(fileList));
             if (IsFirstTimeAddMusic == true)
             {
                 musicService.mediaPlayer.Source = musicService.mediaPlaybackList;
@@ -477,9 +478,7 @@ namespace LiveMusicLite
                 {
                     StorageFile file = fileList1[i];
 
-                    Task<MusicProperties> musicPropertiesTask = file.Properties.GetMusicPropertiesAsync().AsTask();
-                    musicPropertiesTask.Wait();
-                    MusicProperties musicProperties = musicPropertiesTask.Result;
+                    MusicProperties musicProperties = await file.Properties.GetMusicPropertiesAsync();
 
                     if (string.IsNullOrWhiteSpace(musicProperties.Artist) == true)
                     {
@@ -496,41 +495,36 @@ namespace LiveMusicLite
                         musicProperties.Album = "未知专辑";
                     }
 
-                    MusicPropertiesList.Add(musicProperties);
-
-                    Task<StorageItemThumbnail> musicThumbnailTask = file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem).AsTask();
-                    musicThumbnailTask.Wait();
-
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        BitmapImage bitmapImage = new BitmapImage();
-                        bitmapImage.SetSource(musicThumbnailTask.Result);
-                        MusicImageList.Add(bitmapImage);
-                    });
-
-                    string AlbumSaveName = musicProperties.Album;
-                    AlbumSaveName = AlbumSaveName.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
-
-                    Task task = new Task(async () =>
-                    {
-                        if (!File.Exists($"{ApplicationData.Current.TemporaryFolder.Path}\\{AlbumSaveName}.jpg"))
-                        {
-                            StorageFile storageFile = await ApplicationData.Current.TemporaryFolder.CreateFileAsync($"{AlbumSaveName}.jpg", CreationCollisionOption.OpenIfExists);
-                            var fileStream = await storageFile.OpenStreamForWriteAsync();
-                            await WindowsRuntimeStreamExtensions.AsStreamForRead(musicThumbnailTask.Result.GetInputStreamAt(0)).CopyToAsync(fileStream);
-                            fileStream.Dispose();
-                        }
-                    });
-                    task.Start();
-                    task.Wait();
 
                     MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(fileList1[i]));
                     MediaItemDisplayProperties props = mediaPlaybackItem.GetDisplayProperties();
                     props.Type = Windows.Media.MediaPlaybackType.Music;
                     props.MusicProperties.Title = musicProperties.Title;
                     props.MusicProperties.Artist = musicProperties.Artist;
-                    props.MusicProperties.AlbumTitle = musicProperties.AlbumArtist;
-                    props.Thumbnail = RandomAccessStreamReference.CreateFromStream(musicThumbnailTask.Result);
+                    props.MusicProperties.AlbumTitle = musicProperties.Album;
+                    props.MusicProperties.TrackNumber = musicProperties.TrackNumber;
+                    props.MusicProperties.AlbumArtist = musicProperties.AlbumArtist;
+                    foreach (string item in musicProperties.Genre)
+                    {
+                        props.MusicProperties.Genres.Add(item);
+                    }
+                    #region Image
+                    //下面这三个语句可能有问题
+                    Mp3Stream mp3 = new Mp3Stream(await file.OpenStreamForReadAsync());
+                    var tag2x = mp3.GetTag(Id3TagFamily.Version2x);
+                    var tag1x = mp3.GetTag(Id3TagFamily.Version1x);
+
+                    if (tag2x?.Pictures.Count < 1 && tag1x?.Pictures.Count < 1)
+                    {
+                        var Thumbnail = await (await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/NullAlbum.png"))).GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
+                        props.Thumbnail = RandomAccessStreamReference.CreateFromStream(Thumbnail);
+                    }
+                    else
+                    {
+                        StorageItemThumbnail Thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
+                        props.Thumbnail = RandomAccessStreamReference.CreateFromStream(Thumbnail);
+                    }
+                    #endregion
                     mediaPlaybackItem.ApplyDisplayProperties(props);
                     musicService.mediaPlaybackList.Items.Add(mediaPlaybackItem);
                 }
@@ -596,15 +590,12 @@ namespace LiveMusicLite
         private void ResetMusicPropertiesList()
         {
             musicInfomation.ResetAllMusicProperties();
-            MusicPropertiesList.Clear();
-            MusicImageList.Clear();
         }
 
-        private async void GetMusicImages()
+        private async Task GetMusicImages()
         {
             int x = 0;
             StorageFolder musicFolder = KnownFolders.MusicLibrary;
-            List<Image> images = new List<Image>();
             List<StorageFile> list =
                 (
                     from StorageFile file
@@ -613,15 +604,16 @@ namespace LiveMusicLite
                     select file
                 ).AsParallel().ToList();
             List<string> albumList = new List<string>();
+
             await Task.Run(async () =>
             {
-                for (int i = 0; i < list.Count(); x++)
+                for (int i = 0; i < list.Count; x++)
                 {
                     if (i == 20 && Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Mobile")
                     {
                         break;
                     }
-                    if (i == 72)
+                    else if (i == 72)
                     {
                         break;
                     }
@@ -647,7 +639,7 @@ namespace LiveMusicLite
                                          Height = 100,
                                          Width = 100,
                                      };
-                                     images.Add(image);
+                                     musicImages.Add(image);
                                      albumList.Add(musicProperties.Album);
                                  });
                                 i++;
@@ -656,7 +648,6 @@ namespace LiveMusicLite
                     }
                 }
             });
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => backgroundImagesGridView.ItemsSource = images);
         }
 
         /// <summary>
@@ -665,11 +656,17 @@ namespace LiveMusicLite
         private async void SetTileSource()
         {
             string album = $"{musicInfomation.MusicAlbumProperties.Replace(":", string.Empty).Replace(" / ", string.Empty).Replace("\\", string.Empty).Replace(" ? ", string.Empty).Replace(" * ", string.Empty).Replace(" | ", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty)}";
+            string imagePath = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg";
+            if (album == "未知专辑")
+            {
+                imagePath = (await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/NullAlbum.png"))).Path;
+            }
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (MusicPropertiesList.Count > musicService.mediaPlaybackList.CurrentItemIndex + 1)
+                if (musicService.mediaPlaybackList.Items.Count > musicService.mediaPlaybackList.CurrentItemIndex + 1)
                 {
                     int index = (int)(musicService.mediaPlaybackList.CurrentItemIndex + 1);
+                    Windows.Media.MusicDisplayProperties MusicProps = musicService.mediaPlaybackList.Items[index].GetDisplayProperties().MusicProperties;
                     var tileContent = new TileContent()
                     {
                         Visual = new TileVisual()
@@ -680,7 +677,7 @@ namespace LiveMusicLite
                                 {
                                     BackgroundImage = new TileBackgroundImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             },
@@ -712,7 +709,7 @@ namespace LiveMusicLite
                                 },
                                     PeekImage = new TilePeekImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             },
@@ -759,6 +756,7 @@ namespace LiveMusicLite
                                         {
                                             Text = musicInfomation.MusicTitleProperties,
                                             HintStyle = AdaptiveTextStyle.Title,
+                                            HintMaxLines = 2,
                                             HintWrap = true,
                                             HintAlign = AdaptiveTextAlign.Left
                                         },
@@ -777,24 +775,24 @@ namespace LiveMusicLite
                                         },
                                         new AdaptiveText()
                                         {
-                                            Text = MusicPropertiesList[index].Title,
+                                            Text = MusicProps.Title,
                                             HintWrap = true,
                                             HintAlign = AdaptiveTextAlign.Left
                                         },
                                         new AdaptiveText()
                                         {
-                                        Text = MusicPropertiesList[index].AlbumArtist,
+                                        Text = MusicProps.AlbumArtist,
                                         HintWrap = true
                                         },
                                         new AdaptiveText()
                                         {
-                                            Text = MusicPropertiesList[index].Album,
+                                            Text = MusicProps.AlbumTitle,
                                             HintWrap = true
                                         }
                                     },
                                     PeekImage = new TilePeekImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             }
@@ -808,13 +806,14 @@ namespace LiveMusicLite
                     {
                         Visual = new TileVisual()
                         {
+                            #region TheSameToBefore
                             TileSmall = new TileBinding()
                             {
                                 Content = new TileBindingContentAdaptive()
                                 {
                                     BackgroundImage = new TileBackgroundImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             },
@@ -846,7 +845,7 @@ namespace LiveMusicLite
                                 },
                                     PeekImage = new TilePeekImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             },
@@ -879,10 +878,12 @@ namespace LiveMusicLite
                                 },
                                     PeekImage = new TilePeekImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             },
+                            #endregion
+
                             TileLarge = new TileBinding()
                             {
                                 Content = new TileBindingContentAdaptive()
@@ -893,7 +894,7 @@ namespace LiveMusicLite
                                     {
                                         Text = musicInfomation.MusicTitleProperties,
                                         HintStyle = AdaptiveTextStyle.Title,
-                                        HintMaxLines = 3,
+                                        HintMaxLines = 2,
                                         HintWrap = true,
                                         HintAlign = AdaptiveTextAlign.Left
                                     },
@@ -910,7 +911,7 @@ namespace LiveMusicLite
                                 },
                                     PeekImage = new TilePeekImage()
                                     {
-                                        Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
+                                        Source = imagePath
                                     }
                                 }
                             }
@@ -947,6 +948,11 @@ namespace LiveMusicLite
         {
             SettingsContentDialog settingsContentDialog = new SettingsContentDialog();
             await settingsContentDialog.ShowAsync();
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            //await GetMusicImages();
         }
     }
 }

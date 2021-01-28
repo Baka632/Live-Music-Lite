@@ -128,18 +128,17 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="FirstStartContentDialog.xaml.cs">
+    <Compile Include="View\FirstStartContentDialog.xaml.cs">
       <DependentUpon>FirstStartContentDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ImageColors.cs" />
-    <Compile Include="MainPage.xaml.cs">
+    <Compile Include="View\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MusicInfomation.cs" />
     <Compile Include="MusicService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="SettingsContentDialog.xaml.cs">
+    <Compile Include="View\SettingsContentDialog.xaml.cs">
       <DependentUpon>SettingsContentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="VolumeGlyphState.cs" />
@@ -158,6 +157,7 @@
     <Content Include="Assets\LargeTile.scale-200.png" />
     <Content Include="Assets\LargeTile.scale-400.png" />
     <Content Include="Assets\Live Music Lite Light.png" />
+    <Content Include="Assets\NullAlbum.png" />
     <Content Include="Assets\SmallTile.scale-100.png" />
     <Content Include="Assets\SmallTile.scale-125.png" />
     <Content Include="Assets\SmallTile.scale-150.png" />
@@ -211,24 +211,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="FirstStartContentDialog.xaml">
+    <Page Include="View\FirstStartContentDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainPage.xaml">
+    <Page Include="View\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MainPage.devicefamily-mobile.xaml">
+    <Page Include="View\MainPage.devicefamily-mobile.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SettingsContentDialog.xaml">
+    <Page Include="View\SettingsContentDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ID3.Net-DotNetCore">
+      <Version>0.4.0.13</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.10</Version>
     </PackageReference>
