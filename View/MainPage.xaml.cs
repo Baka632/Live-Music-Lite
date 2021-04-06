@@ -28,6 +28,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using System.Threading.Tasks;
 using Id3;
+using LiveMusicLite.Model;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -47,6 +48,10 @@ namespace LiveMusicLite
         /// 音乐服务的实例
         /// </summary>
         MusicService musicService = App.musicService;
+        /// <summary>
+        /// 文件服务的实例
+        /// </summary>
+        FileService FileService = new FileService();
         /// <summary>
         /// 计时器DispatcherTimer的实例
         /// </summary>
@@ -463,71 +468,12 @@ namespace LiveMusicLite
             backgroundImagesGridView.Visibility = Visibility.Collapsed;
             noneMusicStackPanel.Visibility = Visibility.Collapsed;
 
-            await Task.Run(() => GetProps(fileList));
+            await Task.Run(() => FileService.GetMusicProperties(fileList));
             if (IsFirstTimeAddMusic == true)
             {
                 musicService.mediaPlayer.Source = musicService.mediaPlaybackList;
-                musicService.mediaPlayer.Play();
                 ChangeMusicControlButtonsUsableState();
                 IsFirstTimeAddMusic = false;
-            }
-
-            async void GetProps(IReadOnlyList<StorageFile> fileList1)
-            {
-                for (int i = 0; i < fileList1.Count; i++)
-                {
-                    StorageFile file = fileList1[i];
-
-                    MusicProperties musicProperties = await file.Properties.GetMusicPropertiesAsync();
-
-                    if (string.IsNullOrWhiteSpace(musicProperties.Artist) == true)
-                    {
-                        musicProperties.AlbumArtist = "未知艺术家";
-                    }
-
-                    if (string.IsNullOrWhiteSpace(musicProperties.Title) == true)
-                    {
-                        musicProperties.Title = file.Name;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(musicProperties.Album) == true)
-                    {
-                        musicProperties.Album = "未知专辑";
-                    }
-
-
-                    MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(fileList1[i]));
-                    MediaItemDisplayProperties props = mediaPlaybackItem.GetDisplayProperties();
-                    props.Type = Windows.Media.MediaPlaybackType.Music;
-                    props.MusicProperties.Title = musicProperties.Title;
-                    props.MusicProperties.Artist = musicProperties.Artist;
-                    props.MusicProperties.AlbumTitle = musicProperties.Album;
-                    props.MusicProperties.TrackNumber = musicProperties.TrackNumber;
-                    props.MusicProperties.AlbumArtist = musicProperties.AlbumArtist;
-                    foreach (string item in musicProperties.Genre)
-                    {
-                        props.MusicProperties.Genres.Add(item);
-                    }
-                    #region Image
-                    //下面这三个语句可能有问题
-                    Mp3Stream mp3 = new Mp3Stream(await file.OpenStreamForReadAsync());
-                    var tag2x = mp3.GetTag(Id3TagFamily.Version2x);
-                    var tag1x = mp3.GetTag(Id3TagFamily.Version1x);
-
-                    if (tag2x?.Pictures.Count < 1 && tag1x?.Pictures.Count < 1)
-                    {
-                        var Thumbnail = await (await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/NullAlbum.png"))).GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
-                        props.Thumbnail = RandomAccessStreamReference.CreateFromStream(Thumbnail);
-                    }
-                    else
-                    {
-                        StorageItemThumbnail Thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
-                        props.Thumbnail = RandomAccessStreamReference.CreateFromStream(Thumbnail);
-                    }
-                    #endregion
-                    mediaPlaybackItem.ApplyDisplayProperties(props);
-                    musicService.mediaPlaybackList.Items.Add(mediaPlaybackItem);
-                }
             }
         }
 
