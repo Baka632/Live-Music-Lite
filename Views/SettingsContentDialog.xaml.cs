@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiveMusicLite.Services;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -36,7 +37,7 @@ namespace LiveMusicLite
             Light, Dark, Default
         }
 
-        private string _ThemeSettings = App.settings.ThemeSettings;
+        private string _ThemeSettings = Settings.ThemeSettings;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -76,7 +77,7 @@ namespace LiveMusicLite
             }
         }
 
-        private string _MusicOpenOperationString = App.settings.MediaOpenOperation == true ? "覆盖掉现在的播放列表" : "加入到现在的播放列表";
+        private string _MusicOpenOperationString = Settings.MediaOpenOperation == true ? "覆盖掉现在的播放列表" : "加入到现在的播放列表";
         private bool IsUserMode = false;
         private string _TempFolderSize;
 
@@ -105,15 +106,15 @@ namespace LiveMusicLite
             switch (Theme)
             {
                 case "浅色":
-                    App.settings.ThemeSettings = ThemeSettings.Light.ToString();
+                    Settings.ThemeSettings = ThemeSettings.Light.ToString();
                     ThemeSettingProperty = "浅色";
                     break;
                 case "深色":
-                    App.settings.ThemeSettings = ThemeSettings.Dark.ToString();
+                    Settings.ThemeSettings = ThemeSettings.Dark.ToString();
                     ThemeSettingProperty = "深色";
                     break;
                 case "使用系统设置":
-                    App.settings.ThemeSettings = ThemeSettings.Default.ToString();
+                    Settings.ThemeSettings = ThemeSettings.Default.ToString();
                     ThemeSettingProperty = "使用系统设置";
                     break;
             }
@@ -133,11 +134,11 @@ namespace LiveMusicLite
             switch (MusicOpenOperation)
             {
                 case "覆盖掉现在的播放列表":
-                    App.settings.MediaOpenOperation = true;
+                    Settings.MediaOpenOperation = true;
                     MusicOpenOperationStringProperty = "覆盖掉现在的播放列表";
                     break;
                 case "加入到现在的播放列表":
-                    App.settings.MediaOpenOperation = false;
+                    Settings.MediaOpenOperation = false;
                     MusicOpenOperationStringProperty = "加入到现在的播放列表";
                     break;
             }

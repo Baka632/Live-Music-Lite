@@ -5,27 +5,27 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace LiveMusicLite
+namespace LiveMusicLite.Services
 {
     public class VolumeGlyphState : DependencyObject, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-
         private string _volumeGlyph;
+        readonly MusicInfomation MusicInfomation;
+        readonly MusicService MusicService;
 
-        MusicInfomation musicInfomation = App.musicInfomation;
-        MusicService musicService = App.musicService;
-
-        public VolumeGlyphState()
+        public VolumeGlyphState(MusicService musicServiceArgs,MusicInfomation musicInfomationArgs)
         {
+            MusicService = musicServiceArgs;
+            MusicInfomation = musicInfomationArgs;
             ChangeVolumeGlyph();
-            musicService.mediaPlayer.VolumeChanged += MediaPlayer_VolumeChanged;
-            musicService.mediaPlayer.IsMutedChanged += MediaPlayer_IsMutedChanged;
+            MusicService.MediaPlayer.VolumeChanged += MediaPlayer_VolumeChanged;
+            MusicService.MediaPlayer.IsMutedChanged += MediaPlayer_IsMutedChanged;
         }
 
         private void MediaPlayer_IsMutedChanged(Windows.Media.Playback.MediaPlayer sender, object args)
         {
-            switch (musicService.mediaPlayer.IsMuted)
+            switch (MusicService.MediaPlayer.IsMuted)
             {
                 case true:
                     VolumeGlyph = "\uE198";
@@ -38,7 +38,7 @@ namespace LiveMusicLite
 
         private void MediaPlayer_VolumeChanged(Windows.Media.Playback.MediaPlayer sender, object args)
         {
-            if (musicService.mediaPlayer.IsMuted != true)
+            if (MusicService.MediaPlayer.IsMuted != true)
             {
                 ChangeVolumeGlyph();
             }
@@ -46,7 +46,7 @@ namespace LiveMusicLite
 
         public void ChangeVolumeGlyph()
         {
-            double MediaPlayerVolume = musicInfomation.MusicVolumeProperties;
+            double MediaPlayerVolume = MusicInfomation.MusicVolumeProperties;
             if (MediaPlayerVolume > 0.6)
             {
                 VolumeGlyph = "\uE995";

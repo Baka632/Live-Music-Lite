@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiveMusicLite.Services;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,13 +36,13 @@ namespace LiveMusicLite
             switch (Theme)
             {
                 case "浅色":
-                    App.settings.ThemeSettings = ThemeSettings.Light.ToString();
+                    Settings.ThemeSettings = ThemeSettings.Light.ToString();
                     break;
                 case "深色":
-                    App.settings.ThemeSettings = ThemeSettings.Dark.ToString();
+                    Settings.ThemeSettings = ThemeSettings.Dark.ToString();
                     break;
                 case "使用系统设置":
-                    App.settings.ThemeSettings = ThemeSettings.Default.ToString();
+                    Settings.ThemeSettings = ThemeSettings.Default.ToString();
                     break;
             }
         }
@@ -52,10 +53,10 @@ namespace LiveMusicLite
             switch (MusicOpenOperation)
             {
                 case "覆盖掉现在的播放列表":
-                    App.settings.MediaOpenOperation = true;
+                    Settings.MediaOpenOperation = true;
                     break;
                 case "加入到现在的播放列表":
-                    App.settings.MediaOpenOperation = false;
+                    Settings.MediaOpenOperation = false;
                     break;
             }
         }

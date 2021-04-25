@@ -6,64 +6,44 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Media.Playback;
 
-namespace LiveMusicLite
+namespace LiveMusicLite.Services
 {
     /// <summary>
     /// 为音乐播放及音乐播放列表提供类和方法
     /// </summary>
-    public class MusicService : IDisposable
+    public class MusicService
     {
         /// <summary>
         /// 音乐播放器的实例
         /// </summary>
-        public MediaPlayer mediaPlayer = new MediaPlayer();
+        private MediaPlayer _MediaPlayer = new MediaPlayer();
         /// <summary>
         /// 音乐播放列表的实例
         /// </summary>
-        public MediaPlaybackList mediaPlaybackList = new MediaPlaybackList();
-        /// <summary>
-        /// 指示音乐服务是否被清理的值
-        /// </summary>
-        private bool disposedValue;
+        private MediaPlaybackList _MediaPlaybackList = new MediaPlaybackList();
+
+        public MediaPlayer MediaPlayer
+        {
+            get => _MediaPlayer;
+            private set => _MediaPlayer = value;
+        }
+
+        public MediaPlaybackList MediaPlaybackList
+        {
+            get => _MediaPlaybackList;
+            set => _MediaPlaybackList = value;
+        }
+
 
         /// <summary>
         /// 初始化MusicService类的新实例
         /// </summary>
         public MusicService()
         {
-            mediaPlayer.AutoPlay = true;
-            mediaPlayer.AudioCategory = MediaPlayerAudioCategory.Media;
-            mediaPlayer.Volume = App.musicInfomation.MusicVolumeProperties;
-            mediaPlaybackList.MaxPlayedItemsToKeepOpen = 5;
-        }
-
-        #region DisposeMusicService
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: 释放托管状态(托管对象)
-                    mediaPlayer.Dispose();
-                    mediaPlaybackList.Items.Clear();
-
-                    mediaPlayer = null;
-                    mediaPlaybackList = null;
-                }
-
-                // TODO: 释放未托管的资源(未托管的对象)并替代终结器
-                // TODO: 将大型字段设置为 null
-                disposedValue = true;
-                Debug.WriteLine("已清理音乐服务的资源。");
-            }
-        }
-
-        // TODO: 仅当“Dispose(bool disposing)”拥有用于释放未托管资源的代码时才替代终结器
-        ~MusicService()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: false);
+            MediaPlayer.AutoPlay = true;
+            MediaPlayer.AudioCategory = MediaPlayerAudioCategory.Media;
+            MediaPlaybackList.MaxPlayedItemsToKeepOpen = 5;
+            MediaPlayer.Source = MediaPlaybackList;
         }
 
         /// <summary>
@@ -71,20 +51,21 @@ namespace LiveMusicLite
         /// </summary>
         public void Dispose()
         {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            MediaPlayer.Dispose();
+            MediaPlaybackList.Items.Clear();
+
+            MediaPlayer = null;
+            MediaPlaybackList = null;
         }
-        #endregion
 
         /// <summary>
         /// 终止音乐播放
         /// </summary>
         public void StopMusic()
         {
-            mediaPlayer.Pause();
-            mediaPlayer.PlaybackSession.Position = TimeSpan.Zero;
-            mediaPlaybackList.Items.Clear();
+            MediaPlayer.Pause();
+            MediaPlayer.PlaybackSession.Position = TimeSpan.Zero;
+            MediaPlaybackList.Items.Clear();
         }
 
         /// <summary>
@@ -93,7 +74,7 @@ namespace LiveMusicLite
         /// <param name="Volume">将要设置的音量大小,其值范围应在0和1之间,其余值将受到限制</param>
         public void SetMusicPlayerVolume(double Volume)
         {
-            mediaPlayer.Volume = Volume;
+            MediaPlayer.Volume = Volume;
         }
 
         /// <summary>
@@ -101,7 +82,7 @@ namespace LiveMusicLite
         /// </summary>
         public void PreviousMusic()
         {
-            mediaPlaybackList.MovePrevious();
+            MediaPlaybackList.MovePrevious();
         }
 
         /// <summary>
@@ -109,7 +90,7 @@ namespace LiveMusicLite
         /// </summary>
         public void NextMusic()
         {
-            mediaPlaybackList.MoveNext();
+            MediaPlaybackList.MoveNext();
         }
 
         /// <summary>
@@ -117,20 +98,20 @@ namespace LiveMusicLite
         /// </summary>
         public void PlayPauseMusic()
         {
-            switch (mediaPlayer.PlaybackSession.PlaybackState)
+            switch (MediaPlayer.PlaybackSession.PlaybackState)
             {
                 case MediaPlaybackState.None:
-                    mediaPlayer.Play();
+                    MediaPlayer.Play();
                     break;
                 case MediaPlaybackState.Opening:
                     break;
                 case MediaPlaybackState.Buffering:
                     break;
                 case MediaPlaybackState.Playing:
-                    mediaPlayer.Pause();
+                    MediaPlayer.Pause();
                     break;
                 case MediaPlaybackState.Paused:
-                    mediaPlayer.Play();
+                    MediaPlayer.Play();
                     break;
                 default:
                     break;
@@ -142,13 +123,13 @@ namespace LiveMusicLite
         /// </summary>
         public void ShuffleMusic()
         {
-            if (mediaPlaybackList.ShuffleEnabled == true)
+            if (MediaPlaybackList.ShuffleEnabled == true)
             {
-                mediaPlaybackList.ShuffleEnabled = false;
+                MediaPlaybackList.ShuffleEnabled = false;
             }
             else
             {
-                mediaPlaybackList.ShuffleEnabled = true;
+                MediaPlaybackList.ShuffleEnabled = true;
             }
         }
 
@@ -161,15 +142,15 @@ namespace LiveMusicLite
             switch (IsRepeating)
             {
                 case true:
-                    mediaPlaybackList.AutoRepeatEnabled = false;
-                    mediaPlayer.IsLoopingEnabled = false;
+                    MediaPlaybackList.AutoRepeatEnabled = false;
+                    MediaPlayer.IsLoopingEnabled = false;
                     break;
                 case false:
-                    mediaPlaybackList.AutoRepeatEnabled = true;
+                    MediaPlaybackList.AutoRepeatEnabled = true;
                     break;
                 case null:
-                    mediaPlaybackList.AutoRepeatEnabled = true;
-                    mediaPlayer.IsLoopingEnabled = true;
+                    MediaPlaybackList.AutoRepeatEnabled = true;
+                    MediaPlayer.IsLoopingEnabled = true;
                     break;
                 default:
                     break;

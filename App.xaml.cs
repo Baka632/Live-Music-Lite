@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LiveMusicLite.Services;
+using LiveMusicLite.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,11 +29,8 @@ namespace LiveMusicLite
     /// </summary>
     sealed partial class App : Application
     {
-        public static Settings settings = new Settings();
-        public static MusicInfomation musicInfomation = new MusicInfomation();
-        public static MusicService musicService = new MusicService();
-        private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        public static VolumeGlyphState volumeGlyphState = new VolumeGlyphState();
+        public static MainPageViewModel MainPageViewModel;
+        private readonly ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         /// <summary>
         /// 初始化单一实例应用程序对象。这是执行的创作代码的第一行，
@@ -67,8 +66,6 @@ namespace LiveMusicLite
         /// <param name="e">有关启动请求和过程的详细信息。</param>
         protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-
             //当系统收到回退请求(BackRequested)的时候，就会调用方法OnBackRequested来处理该事件
             SystemNavigationManager.GetForCurrentView().BackRequested += OnBackRequested;
             // 隐藏标题栏
@@ -80,7 +77,7 @@ namespace LiveMusicLite
                 
             // 不要在窗口已包含内容时重复应用程序初始化，
             // 只需确保窗口处于活动状态
-            if (rootFrame == null)
+            if (!(Window.Current.Content is Frame rootFrame))
             {
                 // 创建要充当导航上下文的框架，并导航到第一页
                 rootFrame = new Frame();
@@ -111,7 +108,7 @@ namespace LiveMusicLite
                     localSettings.Values["FirstStart"] = "NotFirstStart";
                     FirstStartContentDialog firstStartContentDialog = new FirstStartContentDialog();
                     await firstStartContentDialog.ShowAsync();
-                    settings.MusicVolume = 1d;
+                    Settings.MusicVolume = 1d;
                 }
             }
         }
@@ -137,7 +134,7 @@ namespace LiveMusicLite
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: 保存应用程序状态并停止任何后台活动
-            settings.MusicVolume = musicService.mediaPlayer.Volume; //保存现在的音量
+            Settings.MusicVolume = MainPageViewModel.MusicService.MediaPlayer.Volume; //保存现在的音量
             deferral.Complete();
         }
 
@@ -153,8 +150,7 @@ namespace LiveMusicLite
                 storageFiles.Add((StorageFile)item);
             }
             IReadOnlyList<StorageFile> file = storageFiles;
-            Frame frame = Window.Current.Content as Frame;
-            if (frame == null)
+            if (!(Window.Current.Content is Frame frame))
             {
                 frame = new Frame();
                 Window.Current.Content = frame;
@@ -165,9 +161,7 @@ namespace LiveMusicLite
 
         private void OnBackRequested(object sender, Windows.UI.Core.BackRequestedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-
-            if (rootFrame == null)
+            if (!(Window.Current.Content is Frame rootFrame))
             {
                 return;
             }

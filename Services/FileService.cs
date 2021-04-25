@@ -11,14 +11,18 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 
-namespace LiveMusicLite.Model
+namespace LiveMusicLite.Services
 {
-    class FileService
+    public class FileService
     {
-        private readonly MusicService musicService = App.musicService;
-        private readonly MusicInfomation musicInfomation = App.musicInfomation;
+        private readonly MusicService musicService;
 
-        public async void GetMusicProperties(IReadOnlyList<StorageFile> fileList)
+        public FileService(MusicService musicServiceArgs)
+        {
+            musicService = musicServiceArgs;
+        }
+
+        public async Task GetMusicPropertiesAysnc(IReadOnlyList<StorageFile> fileList)
         {
             for (int i = 0; i < fileList.Count; i++)
             {
@@ -40,7 +44,6 @@ namespace LiveMusicLite.Model
                 {
                     musicProperties.Album = "未知专辑";
                 }
-
 
                 MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(fileList[i]));
                 MediaItemDisplayProperties props = mediaPlaybackItem.GetDisplayProperties();
@@ -76,7 +79,7 @@ namespace LiveMusicLite.Model
                 //}
                 #endregion
                 mediaPlaybackItem.ApplyDisplayProperties(props);
-                musicService.mediaPlaybackList.Items.Add(mediaPlaybackItem);
+                musicService.MediaPlaybackList.Items.Add(mediaPlaybackItem);
             }
         }
     }

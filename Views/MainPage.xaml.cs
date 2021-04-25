@@ -28,7 +28,9 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using System.Threading.Tasks;
 using Id3;
-using LiveMusicLite.Model;
+using LiveMusicLite.ViewModel;
+using LiveMusicLite.Services;
+using LiveMusicLite.Helper;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -43,19 +45,19 @@ namespace LiveMusicLite
         /// <summary>
         /// 音乐信息的实例
         /// </summary>
-        MusicInfomation musicInfomation = App.musicInfomation;
+        MusicInfomation MusicInfomation;
         /// <summary>
         /// 音乐服务的实例
         /// </summary>
-        MusicService musicService = App.musicService;
+        MusicService MusicService;
         /// <summary>
         /// 文件服务的实例
         /// </summary>
-        FileService FileService = new FileService();
+        FileService FileService;
         /// <summary>
         /// 计时器DispatcherTimer的实例
         /// </summary>
-        public static DispatcherTimer dispatcherTimer;
+        DispatcherTimer dispatcherTimer;
         /// <summary>
         /// 在主界面上显示的音乐图片的列表
         /// </summary>
@@ -72,11 +74,11 @@ namespace LiveMusicLite
         /// <summary>
         /// 声音图标状态的实例
         /// </summary>
-        VolumeGlyphState volumeGlyphState = App.volumeGlyphState;
+        VolumeGlyphState volumeGlyphState;
         /// <summary>
         /// 磁贴助手的实例
         /// </summary>
-        TileHelper tileHelper = new TileHelper();
+        TileHelper tileHelper;
 
         /// <summary>
         /// 指示是否从启动以来第一次添加音乐
@@ -86,14 +88,6 @@ namespace LiveMusicLite
         /// 正在播放的状态
         /// </summary>
         string NowPlayingState = "播放";
-        /// <summary>
-        /// 循环播放的状态
-        /// </summary>
-        string RepeatingMusicState = "循环播放:关";
-        /// <summary>
-        /// 随机播放的状态
-        /// </summary>
-        string ShufflingMusicState = "随机播放:关";
 
         /// <summary>
         /// 支持的音频格式数组
@@ -103,18 +97,28 @@ namespace LiveMusicLite
             ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3",
         };
 
+        private MainPageViewModel ViewModel { get; }
+
         /// <summary>
         /// 初始化MainPage类的新实例
         /// </summary>
         public MainPage()
         {
             this.InitializeComponent();
+            ViewModel = new MainPageViewModel();
+            MusicService = ViewModel.MusicService;
+            MusicInfomation = ViewModel.MusicInfomation;
+            FileService = ViewModel.FileService;
+            volumeGlyphState = ViewModel.VolumeGlyphState;
+            tileHelper = ViewModel.TileHelper;
+            App.MainPageViewModel = ViewModel;
+
             pausePlayingButton.IsEnabled = false;
             stopPlayingButton.IsEnabled = false;
 
-            musicService.mediaPlaybackList.CurrentItemChanged += MediaPlaybackList_CurrentItemChanged;
-            musicService.mediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
-            musicService.mediaPlayer.PlaybackSession.NaturalDurationChanged += PlaybackSession_NaturalDurationChanged;
+            MusicService.MediaPlaybackList.CurrentItemChanged += MediaPlaybackList_CurrentItemChanged;
+            MusicService.MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
+            MusicService.MediaPlayer.PlaybackSession.NaturalDurationChanged += PlaybackSession_NaturalDurationChanged;
             mediaControlStackPanel.Visibility = Visibility.Collapsed;
             musicProcessStackPanel.Visibility = Visibility.Collapsed;
 
@@ -124,14 +128,14 @@ namespace LiveMusicLite
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += dispatcherTimer_Tick;
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
-            processSlider.AddHandler(PointerReleasedEvent /*哪个事件*/, new PointerEventHandler(UIElement_OnPointerReleased) /*使用哪个函数处理*/, true /*如果在之前处理，是否还使用函数*/);
-            processSlider.AddHandler(PointerPressedEvent /*哪个事件*/, new PointerEventHandler(UIElement_EnterPressedReleased) /*使用哪个函数处理*/, true /*如果在之前处理，是否还使用函数*/);
+            processSlider.AddHandler(PointerReleasedEvent, new PointerEventHandler(UIElement_OnPointerReleased), true);
+            processSlider.AddHandler(PointerPressedEvent, new PointerEventHandler(UIElement_EnterPressedReleased), true);
         }
 
         private void PlaybackSession_NaturalDurationChanged(MediaPlaybackSession sender, object args)
         {
-            musicInfomation.MusicLenthProperties = sender.NaturalDuration.ToString(@"m\:ss");
-            musicInfomation.MusicDurationProperties = sender.NaturalDuration.TotalSeconds;
+            MusicInfomation.MusicLenthProperties = sender.NaturalDuration.ToString(@"m\:ss");
+            MusicInfomation.MusicDurationProperties = sender.NaturalDuration.TotalSeconds;
         }
 
         /// <summary>
@@ -148,8 +152,8 @@ namespace LiveMusicLite
         /// <param name="args"></param>
         private void UIElement_OnPointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            musicService.mediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
-            musicNowPlayingTimeTextBlock.Text = musicService.mediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+            MusicService.MediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
+            musicNowPlayingTimeTextBlock.Text = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
             IsPointerEntered = false;
         }
 
@@ -162,8 +166,8 @@ namespace LiveMusicLite
         {
             if (IsPointerEntered == false)
             {
-                processSlider.Value = musicService.mediaPlayer.PlaybackSession.Position.TotalSeconds;
-                musicNowPlayingTimeTextBlock.Text = musicService.mediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+                processSlider.Value = MusicService.MediaPlayer.PlaybackSession.Position.TotalSeconds;
+                musicNowPlayingTimeTextBlock.Text = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
             }
         }
 
@@ -184,7 +188,7 @@ namespace LiveMusicLite
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void MuteMusic(object sender, RoutedEventArgs e) => musicService.mediaPlayer.IsMuted = (musicService.mediaPlayer.IsMuted == false);
+        private void MuteMusic(object sender, RoutedEventArgs e) => MusicService.MediaPlayer.IsMuted = (MusicService.MediaPlayer.IsMuted == false);
 
         /// <summary>
         /// 当进度条被拖动时调用的方法
@@ -201,73 +205,13 @@ namespace LiveMusicLite
         }
 
         /// <summary>
-        /// 切换到上一个音乐
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PreviousMusic(object sender, RoutedEventArgs e) => musicService.PreviousMusic();
-
-        /// <summary>
-        /// 切换到下一个音乐
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void NextMusic(object sender, RoutedEventArgs e) => musicService.NextMusic();
-
-        /// <summary>
-        /// 改变播放器的"随机播放"属性
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ShuffleMusic(object sender, RoutedEventArgs e)
-        {
-            musicService.ShuffleMusic();
-            if (musicService.mediaPlaybackList.ShuffleEnabled == true)
-            {
-                ShufflingMusicProperties = "随机播放:开";
-            }
-            else
-            {
-                ShufflingMusicProperties = "随机播放:关";
-            }
-        }
-
-        /// <summary>
-        /// 改变播放器"重复播放"的属性
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void RepeatMusic(object sender, RoutedEventArgs e)
-        {
-            switch (repeatMusicButton.IsChecked)
-            {
-                case true:
-                    musicService.RepeatMusic(false);
-                    RepeatingMusicProperties = "循环播放:全部循环";
-                    break;
-                case false:
-                    musicService.RepeatMusic(true);
-                    repeatMusicButton.Content = new FontIcon { FontFamily = new FontFamily("Segoe MDL2 Assets"), Glyph = "\uE1CD", FontSize = 16 };
-                    RepeatingMusicProperties = "循环播放:关闭循环";
-                    break;
-                case null:
-                    musicService.RepeatMusic(null);
-                    repeatMusicButton.Content = new FontIcon { FontFamily = new FontFamily("Segoe MDL2 Assets"), Glyph = "\uE1CC", FontSize = 16 };
-                    RepeatingMusicProperties = "循环播放:单曲循环";
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        /// <summary>
         /// 当播放器播放状态发生改变时调用的方法
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
         private async void PlaybackSession_PlaybackStateChanged(MediaPlaybackSession sender, object args)
         {
-            switch (musicService.mediaPlayer.PlaybackSession.PlaybackState)
+            switch (MusicService.MediaPlayer.PlaybackSession.PlaybackState)
             {
                 case MediaPlaybackState.Playing:
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -285,7 +229,7 @@ namespace LiveMusicLite
                     {
                         pausePlayingButton.Content = new FontIcon { FontFamily = new FontFamily("Segoe MDL2 Assets"), Glyph = "\uE102", FontSize = 27 };
                         NowPlayingProperties = "播放";
-                        if (musicService.mediaPlaybackList.Items.Count == musicService.mediaPlaybackList.CurrentItemIndex + 1 && (int)processSlider.Value == (int)processSlider.Maximum)
+                        if (MusicService.MediaPlaybackList.Items.Count == MusicService.MediaPlaybackList.CurrentItemIndex + 1 && (int)processSlider.Value == (int)processSlider.Maximum)
                         {
                             dispatcherTimer.Stop();
                             musicNowPlayingTimeTextBlock.Text = "0:00";
@@ -299,33 +243,26 @@ namespace LiveMusicLite
         }
 
         /// <summary>
-        /// 改变播放器播放的状态
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PlayPauseMusic(object sender, RoutedEventArgs e) => musicService.PlayPauseMusic();
-
-        /// <summary>
         /// 当媒体播放列表的当前播放项目发生更改时调用的方法
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
         private async void MediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
-            if (musicService.mediaPlaybackList.CurrentItem != null)
+            if (MusicService.MediaPlaybackList.CurrentItem != null)
             {
-                Windows.Media.MusicDisplayProperties currentMusicInfomation = musicService.mediaPlaybackList.CurrentItem.GetDisplayProperties().MusicProperties;
+                Windows.Media.MusicDisplayProperties currentMusicInfomation = MusicService.MediaPlaybackList.CurrentItem.GetDisplayProperties().MusicProperties;
                 RandomAccessStreamReference CurrentItemMusicThumbnail = sender.CurrentItem.GetDisplayProperties().Thumbnail;
                 IRandomAccessStream musicThumbnail = await CurrentItemMusicThumbnail.OpenReadAsync();
 
-                musicInfomation.MusicAlbumArtistProperties = currentMusicInfomation.AlbumArtist;
-                musicInfomation.MusicTitleProperties = currentMusicInfomation.Title;
-                musicInfomation.MusicAlbumProperties = currentMusicInfomation.AlbumTitle;
+                MusicInfomation.MusicAlbumArtistProperties = currentMusicInfomation.AlbumArtist;
+                MusicInfomation.MusicTitleProperties = currentMusicInfomation.Title;
+                MusicInfomation.MusicAlbumProperties = currentMusicInfomation.AlbumTitle;
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                 {
                     BitmapImage image = new BitmapImage();
                     await image.SetSourceAsync(musicThumbnail);
-                    musicInfomation.MusicImageProperties = image;
+                    MusicInfomation.MusicImageProperties = image;
 
                     processSlider.IsEnabled = true;
                     processSlider.Value = 0;
@@ -358,7 +295,7 @@ namespace LiveMusicLite
             TileUpdateManager.CreateTileUpdaterForApplication().Clear();
             ChangeMusicControlButtonsUsableState();
             ResetMusicPropertiesList();
-            musicService.StopMusic();
+            MusicService.StopMusic();
         }
 
         /// <summary>
@@ -375,32 +312,6 @@ namespace LiveMusicLite
         }
 
         /// <summary>
-        /// 播放器"重复播放"状态的属性
-        /// </summary>
-        private string RepeatingMusicProperties
-        {
-            get => RepeatingMusicState;
-            set
-            {
-                RepeatingMusicState = value;
-                OnPropertiesChanged();
-            }
-        }
-
-        /// <summary>
-        /// 播放器"循环播放"状态的属性
-        /// </summary>
-        private string ShufflingMusicProperties
-        {
-            get => ShufflingMusicState;
-            set
-            {
-                ShufflingMusicState = value;
-                OnPropertiesChanged();
-            }
-        }
-
-        /// <summary>
         /// 直接打开音乐文件来播放音乐(应用外)
         /// </summary>
         /// <param name="fileList">传入的文件</param>
@@ -412,9 +323,9 @@ namespace LiveMusicLite
                 if (fileList.Count > 0)
                 {
                     ResetMusicPropertiesList();
-                    if (musicService.mediaPlaybackList.Items != null)
+                    if (MusicService.MediaPlaybackList.Items != null)
                     {
-                        musicService.mediaPlaybackList.Items.Clear();
+                        MusicService.MediaPlaybackList.Items.Clear();
                     }
                     PlayAndGetMusicProperites(fileList);
                     mediaControlStackPanel.Visibility = Visibility.Visible;
@@ -468,10 +379,10 @@ namespace LiveMusicLite
             backgroundImagesGridView.Visibility = Visibility.Collapsed;
             noneMusicStackPanel.Visibility = Visibility.Collapsed;
 
-            await Task.Run(() => FileService.GetMusicProperties(fileList));
+            await FileService.GetMusicPropertiesAysnc(fileList);
             if (IsFirstTimeAddMusic == true)
             {
-                musicService.mediaPlayer.Source = musicService.mediaPlaybackList;
+                MusicService.MediaPlayer.Source = MusicService.MediaPlaybackList;
                 ChangeMusicControlButtonsUsableState();
                 IsFirstTimeAddMusic = false;
             }
@@ -506,10 +417,10 @@ namespace LiveMusicLite
         /// <param name="e"></param>
         private void VolumeChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            musicInfomation.MusicVolumeProperties = e.NewValue / 100;
-            if (musicService.mediaPlayer.IsMuted == true)
+            MusicInfomation.MusicVolumeProperties = e.NewValue / 100;
+            if (MusicService.MediaPlayer.IsMuted == true)
             {
-                musicService.mediaPlayer.IsMuted = false;
+                MusicService.MediaPlayer.IsMuted = false;
             }
         }
 
@@ -521,7 +432,7 @@ namespace LiveMusicLite
         {
             if (e.Parameter is IReadOnlyList<StorageFile> file && e.Parameter != null)
             {
-                OpenMusicFile(file, App.settings.MediaOpenOperation);
+                OpenMusicFile(file, Settings.MediaOpenOperation);
             }
             else
             {
@@ -535,7 +446,7 @@ namespace LiveMusicLite
         /// </summary>
         private void ResetMusicPropertiesList()
         {
-            musicInfomation.ResetAllMusicProperties();
+            MusicInfomation.ResetAllMusicProperties();
         }
 
         private async Task GetMusicImages()
@@ -601,7 +512,7 @@ namespace LiveMusicLite
         /// </summary>
         private async void SetTileSource()
         {
-            string album = $"{musicInfomation.MusicAlbumProperties.Replace(":", string.Empty).Replace(" / ", string.Empty).Replace("\\", string.Empty).Replace(" ? ", string.Empty).Replace(" * ", string.Empty).Replace(" | ", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty)}";
+            string album = $"{MusicInfomation.MusicAlbumProperties.Replace(":", string.Empty).Replace(" / ", string.Empty).Replace("\\", string.Empty).Replace(" ? ", string.Empty).Replace(" * ", string.Empty).Replace(" | ", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty)}";
             string imagePath = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg";
             if (album == "未知专辑")
             {
@@ -609,10 +520,10 @@ namespace LiveMusicLite
             }
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (musicService.mediaPlaybackList.Items.Count > musicService.mediaPlaybackList.CurrentItemIndex + 1)
+                if (MusicService.MediaPlaybackList.Items.Count > MusicService.MediaPlaybackList.CurrentItemIndex + 1)
                 {
-                    int index = (int)(musicService.mediaPlaybackList.CurrentItemIndex + 1);
-                    Windows.Media.MusicDisplayProperties MusicProps = musicService.mediaPlaybackList.Items[index].GetDisplayProperties().MusicProperties;
+                    int index = (int)(MusicService.MediaPlaybackList.CurrentItemIndex + 1);
+                    Windows.Media.MusicDisplayProperties MusicProps = MusicService.MediaPlaybackList.Items[index].GetDisplayProperties().MusicProperties;
                     var tileContent = new TileContent()
                     {
                         Visual = new TileVisual()
@@ -635,20 +546,20 @@ namespace LiveMusicLite
                                 {
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicTitleProperties,
+                                        Text = MusicInfomation.MusicTitleProperties,
                                         HintMaxLines = 2,
                                         HintWrap = true,
                                         HintAlign = AdaptiveTextAlign.Left
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumArtistProperties,
+                                        Text = MusicInfomation.MusicAlbumArtistProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumProperties,
+                                        Text = MusicInfomation.MusicAlbumProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     }
@@ -667,7 +578,7 @@ namespace LiveMusicLite
                                 {
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicTitleProperties,
+                                        Text = MusicInfomation.MusicTitleProperties,
                                         HintStyle = AdaptiveTextStyle.Subtitle,
                                         HintMaxLines = 1,
                                         HintWrap = true,
@@ -675,13 +586,13 @@ namespace LiveMusicLite
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumArtistProperties,
+                                        Text = MusicInfomation.MusicAlbumArtistProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumProperties,
+                                        Text = MusicInfomation.MusicAlbumProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     }
@@ -700,7 +611,7 @@ namespace LiveMusicLite
                                     {
                                         new AdaptiveText()
                                         {
-                                            Text = musicInfomation.MusicTitleProperties,
+                                            Text = MusicInfomation.MusicTitleProperties,
                                             HintStyle = AdaptiveTextStyle.Title,
                                             HintMaxLines = 2,
                                             HintWrap = true,
@@ -708,12 +619,12 @@ namespace LiveMusicLite
                                         },
                                         new AdaptiveText()
                                         {
-                                            Text = musicInfomation.MusicAlbumArtistProperties,
+                                            Text = MusicInfomation.MusicAlbumArtistProperties,
                                             HintWrap = true
                                         },
                                         new AdaptiveText()
                                         {
-                                            Text = musicInfomation.MusicAlbumProperties,
+                                            Text = MusicInfomation.MusicAlbumProperties,
                                         },
                                         new AdaptiveText()
                                         {
@@ -771,20 +682,20 @@ namespace LiveMusicLite
                                 {
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicTitleProperties,
+                                        Text = MusicInfomation.MusicTitleProperties,
                                         HintMaxLines = 2,
                                         HintWrap = true,
                                         HintAlign = AdaptiveTextAlign.Left
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumArtistProperties,
+                                        Text = MusicInfomation.MusicAlbumArtistProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumProperties,
+                                        Text = MusicInfomation.MusicAlbumProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     }
@@ -803,7 +714,7 @@ namespace LiveMusicLite
                                 {
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicTitleProperties,
+                                        Text = MusicInfomation.MusicTitleProperties,
                                         HintStyle = AdaptiveTextStyle.Subtitle,
                                         HintMaxLines = 1,
                                         HintWrap = true,
@@ -811,13 +722,13 @@ namespace LiveMusicLite
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumArtistProperties,
+                                        Text = MusicInfomation.MusicAlbumArtistProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumProperties,
+                                        Text = MusicInfomation.MusicAlbumProperties,
                                         HintMaxLines = 1,
                                         HintWrap = true
                                     }
@@ -838,7 +749,7 @@ namespace LiveMusicLite
                                 {
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicTitleProperties,
+                                        Text = MusicInfomation.MusicTitleProperties,
                                         HintStyle = AdaptiveTextStyle.Title,
                                         HintMaxLines = 2,
                                         HintWrap = true,
@@ -846,12 +757,12 @@ namespace LiveMusicLite
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumArtistProperties,
+                                        Text = MusicInfomation.MusicAlbumArtistProperties,
                                         HintWrap = true
                                     },
                                     new AdaptiveText()
                                     {
-                                        Text = musicInfomation.MusicAlbumProperties,
+                                        Text = MusicInfomation.MusicAlbumProperties,
                                         HintWrap = true
                                     }
                                 },
@@ -867,38 +778,6 @@ namespace LiveMusicLite
                     tileHelper.ShowTitle(tileContent);
                 }
             });
-        }
-
-        private class TileHelper
-        {
-            /// <summary>
-            /// 显示磁贴
-            /// </summary>
-            /// <param name="tileContent">磁贴源</param>
-            public void ShowTitle(TileContent tileContent)
-            {
-                // Create the tile notification
-                var tileNotif = new TileNotification(tileContent.GetXml());
-
-                // And send the notification to the primary tile
-                TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
-            }
-
-            /// <summary>
-            /// 删除磁贴
-            /// </summary>
-            public void DeleteTile() => TileUpdateManager.CreateTileUpdaterForApplication().Clear();
-        }
-
-        private async void ShowSettings(object sender, RoutedEventArgs e)
-        {
-            SettingsContentDialog settingsContentDialog = new SettingsContentDialog();
-            await settingsContentDialog.ShowAsync();
-        }
-
-        private async void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            //await GetMusicImages();
         }
     }
 }

@@ -5,39 +5,38 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace LiveMusicLite
+namespace LiveMusicLite.Services
 {
     /// <summary>
     /// 为应用程序的设置提供属性
     /// </summary>
-    public class Settings
+    public static class Settings
     {
         /// <summary>
         /// 访问本地设置的实例
         /// </summary>
-        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        ApplicationDataCompositeValue SuspendedData = new ApplicationDataCompositeValue();
+        static ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
         /// <summary>
         /// 主题设置的值
         /// </summary>
-        string _ThemeSettings;
+        static string _ThemeSettings;
         /// <summary>
         /// 音量大小的值
         /// </summary>
-        double _MusicVolume;
+        static double _MusicVolume;
         /// <summary>
         /// 指示是否在启动时加载音乐列表的值
         /// </summary>
-        bool _IsLoadMusicOnStartUp;
+        static bool _IsLoadMusicOnStartUp;
         /// <summary>
         /// 指示在手动打开音乐时选择何种操作的值
         /// </summary>
-        bool _MediaOpenOperation;
+        static bool _MediaOpenOperation;
 
         /// <summary>
         /// 初始化Settings类的新实例
         /// </summary>
-        public Settings()
+        static Settings()
         {
             switch ((string)localSettings.Values["ThemeSetting"])
             {
@@ -84,7 +83,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 设置中主题设置的属性
         /// </summary>
-        public string ThemeSettings
+        public static string ThemeSettings
         {
             get => _ThemeSettings;
             set
@@ -97,7 +96,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 设置中音乐大小的属性
         /// </summary>
-        public double MusicVolume
+        public static double MusicVolume
         {
             get => _MusicVolume;
             set
@@ -110,7 +109,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 设置中是否加载音乐列表的设置的属性
         /// </summary>
-        public bool IsLoadMusicOnStartUp
+        public static bool IsLoadMusicOnStartUp
         {
             get => _IsLoadMusicOnStartUp;
             set
@@ -123,7 +122,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 设置中手动打开音乐文件操作的属性
         /// </summary>
-        public bool MediaOpenOperation
+        public static bool MediaOpenOperation
         {
             get => _MediaOpenOperation;
             set

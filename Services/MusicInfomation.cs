@@ -10,7 +10,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace LiveMusicLite
+namespace LiveMusicLite.Services
 {
     /// <summary>
     /// 为音乐的信息提供属性
@@ -18,11 +18,12 @@ namespace LiveMusicLite
     public class MusicInfomation : DependencyObject, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+        private MusicService MusicService;
 
         /// <summary>
         /// 播放器音量,默认值为1
         /// </summary>
-        double MusicVolume = App.settings.MusicVolume;
+        double MusicVolume = Settings.MusicVolume;
         /// <summary>
         /// 专辑艺术家,默认值为空("")
         /// </summary>
@@ -51,9 +52,9 @@ namespace LiveMusicLite
         /// <summary>
         /// 初始化MusicInfomation的新实例
         /// </summary>
-        public MusicInfomation()
+        public MusicInfomation(MusicService musicService)
         {
-            //这里什么都不会做,因为字段已经设置好了,显式写出这个构造器只是为了跟踪究竟有哪些语句使用了这个类,以及添加实例化类的注释
+            MusicService = musicService;
         }
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace LiveMusicLite
             {
                 MusicVolume = value;
                 VolumeInSliderProperties = value * 100;
-                App.musicService.SetMusicPlayerVolume(MusicVolume);
+                MusicService.SetMusicPlayerVolume(MusicVolume);
                 OnPropertiesChanged();
             }
         }
