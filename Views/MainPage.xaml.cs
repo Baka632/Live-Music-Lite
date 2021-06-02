@@ -386,6 +386,10 @@ namespace LiveMusicLite
                 ChangeMusicControlButtonsUsableState();
                 IsFirstTimeAddMusic = false;
             }
+            else
+            {
+                MusicService.MediaPlayer.Play();
+            }
         }
 
         /// <summary>
