@@ -4,36 +4,32 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LiveMusicLite.ViewModel;
 using Windows.Media.Playback;
+using Windows.UI.Xaml;
 
 namespace LiveMusicLite.Services
 {
     /// <summary>
     /// 为音乐播放及音乐播放列表提供类和方法
     /// </summary>
-    public class MusicService
+    public class MusicService : NotificationObject, IDisposable
     {
-        /// <summary>
-        /// 音乐播放器的实例
-        /// </summary>
-        private MediaPlayer _MediaPlayer = new MediaPlayer();
-        /// <summary>
-        /// 音乐播放列表的实例
-        /// </summary>
-        private MediaPlaybackList _MediaPlaybackList = new MediaPlaybackList();
+        public MediaPlayer MediaPlayer { get; } = new MediaPlayer();
 
-        public MediaPlayer MediaPlayer
+        public MediaPlaybackList MediaPlaybackList { get; } = new MediaPlaybackList();
+
+        private MediaPlaybackState _MediaPlaybackState;
+
+        public MediaPlaybackState MediaPlaybackState
         {
-            get => _MediaPlayer;
-            private set => _MediaPlayer = value;
+            get => _MediaPlaybackState;
+            set
+            {
+                _MediaPlaybackState = value;
+                OnPropertiesChangedUsingMainThread();
+            }
         }
-
-        public MediaPlaybackList MediaPlaybackList
-        {
-            get => _MediaPlaybackList;
-            set => _MediaPlaybackList = value;
-        }
-
 
         /// <summary>
         /// 初始化MusicService类的新实例
@@ -44,18 +40,13 @@ namespace LiveMusicLite.Services
             MediaPlayer.AudioCategory = MediaPlayerAudioCategory.Media;
             MediaPlaybackList.MaxPlayedItemsToKeepOpen = 5;
             MediaPlayer.Source = MediaPlaybackList;
+            MediaPlayer.PlaybackSession.PlaybackStateChanged += OnCurrentStateChanged;
+            MediaPlaybackState = MediaPlayer.PlaybackSession.PlaybackState;
         }
 
-        /// <summary>
-        /// 清理音乐服务的所有资源,如果使用这个方法,则必须重新实例化这个类
-        /// </summary>
-        public void Dispose()
+        private void OnCurrentStateChanged(MediaPlaybackSession session, object args)
         {
-            MediaPlayer.Dispose();
-            MediaPlaybackList.Items.Clear();
-
-            MediaPlayer = null;
-            MediaPlaybackList = null;
+            MediaPlaybackState = session.PlaybackState;
         }
 
         /// <summary>
@@ -118,12 +109,17 @@ namespace LiveMusicLite.Services
             }
         }
 
+        public void PlayMusic()
+        {
+            MediaPlayer.Play();
+        }
+
         /// <summary>
         /// 控制是否随机播放音乐,如果现在的状态为false,则改为true,反之亦然
         /// </summary>
         public void ShuffleMusic()
         {
-            if (MediaPlaybackList.ShuffleEnabled == true)
+            if (MediaPlaybackList.ShuffleEnabled)
             {
                 MediaPlaybackList.ShuffleEnabled = false;
             }
@@ -155,6 +151,34 @@ namespace LiveMusicLite.Services
                 default:
                     break;
             }
+        }
+
+        public async Task AddMusicAsync(IList<MediaPlaybackItem> items)
+        {
+            await Task.Run(() => AddItems(items));
+
+            void AddItems(IList<MediaPlaybackItem> mediaPlaybackItems)
+            {
+                foreach (MediaPlaybackItem item in mediaPlaybackItems)
+                {
+                    MediaPlaybackList.Items.Add(item);
+                }
+            }
+        }
+        
+        public async Task AddMusicAsync(MediaPlaybackItem item)
+        {
+            await Task.Run(() => MediaPlaybackList.Items.Add(item));
+        }
+
+        public void ClearMediaPlaybackList()
+        {
+            MediaPlaybackList.Items.Clear();
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)MediaPlayer).Dispose();
         }
     }
 }

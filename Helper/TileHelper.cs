@@ -1,9 +1,7 @@
-﻿using Microsoft.Toolkit.Uwp.Notifications;
+﻿using LiveMusicLite.Services;
+using Microsoft.Toolkit.Uwp.Notifications;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Windows.Storage;
 using Windows.UI.Notifications;
 
 namespace LiveMusicLite.Helper
@@ -17,7 +15,7 @@ namespace LiveMusicLite.Helper
         public void ShowTitle(TileContent tileContent)
         {
             // Create the tile notification
-            var tileNotif = new TileNotification(tileContent.GetXml());
+            TileNotification tileNotif = new TileNotification(tileContent.GetXml());
 
             // And send the notification to the primary tile
             TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
@@ -26,6 +24,9 @@ namespace LiveMusicLite.Helper
         /// <summary>
         /// 删除磁贴
         /// </summary>
-        public void DeleteTile() => TileUpdateManager.CreateTileUpdaterForApplication().Clear();
+        public void DeleteTile()
+        {
+            TileUpdateManager.CreateTileUpdaterForApplication().Clear();
+        }
     }
 }

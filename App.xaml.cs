@@ -107,7 +107,7 @@ namespace LiveMusicLite
                 {
                     localSettings.Values["FirstStart"] = "NotFirstStart";
                     FirstStartContentDialog firstStartContentDialog = new FirstStartContentDialog();
-                    await firstStartContentDialog.ShowAsync();
+                    _ = await firstStartContentDialog.ShowAsync();
                     Settings.MusicVolume = 1d;
                 }
             }

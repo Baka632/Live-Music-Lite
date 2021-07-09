@@ -2,19 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.UI.Xaml;
 
 namespace LiveMusicLite.Commands
 {
     public class DelegateCommand : ICommand
     {
         public event EventHandler CanExecuteChanged;
-        public event Action<MediaCommandExecutedEventArgs> CommandExecuted;
         public Action<object> ExecuteAction { get; set; }
         public Func<object, bool> CanExecuteFunc { get; set; }
+        private DispatcherTimer Timer = new DispatcherTimer();
 
-        public bool CanExecute(object parameter)
+        public DelegateCommand()
+        {
+            Timer.Tick += OnTimerTick;
+            Timer.Interval = new TimeSpan(0, 0, 0, 0, 350);
+            Timer.Start();
+        }
+
+        private void OnTimerTick(object sender, object e)
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public virtual bool CanExecute(object parameter)
         {
             if (CanExecuteFunc == null)
             {
@@ -23,14 +37,13 @@ namespace LiveMusicLite.Commands
             return CanExecuteFunc(parameter);
         }
 
-        public void Execute(object parameter)
+        public virtual void Execute(object parameter)
         {
             if (ExecuteAction == null)
             {
                 return;
             }
             ExecuteAction(parameter);
-            CommandExecuted?.Invoke(new MediaCommandExecutedEventArgs() { Parameter = parameter });
         }
     }
 }

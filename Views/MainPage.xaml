@@ -4,11 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Windows10FallCreatorsUpdate="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 5)"
     xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
+    xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
     xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:LiveMusicLite"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodel="using:LiveMusicLite.ViewModel" 
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:viewmodel="using:LiveMusicLite.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainPageViewModel}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
@@ -17,17 +19,17 @@
             <Style x:Key="ButtonFontIconStyle" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="FontSize" Value="16" />
-                <Setter Property="Height" Value="35" />
-                <Setter Property="Width" Value="35" />
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Width" Value="40" />
             </Style>
             <Windows10version1809:Style x:Key="ToggleButtonButtonFontIconStyle" BasedOn="{StaticResource ToggleButtonRevealStyle}" TargetType="ToggleButton">
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
                 <Setter Property="Foreground" Value="White" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontSize" Value="16" />
-                <Setter Property="Height" Value="35" />
-                <Setter Property="Width" Value="35" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Width" Value="40" />
                 <Setter Property="CornerRadius" Value="2" />
             </Windows10version1809:Style>
             <SolidColorBrush x:Key="ToggleButtonUncheckedCheckedIndeterminateBackground" Color="{ThemeResource SystemAccentColor}" />
@@ -216,9 +218,10 @@
             x:Name="noneMusicStackPanel"
             Margin="30,40,0,0"
             HorizontalAlignment="Left"
-            VerticalAlignment="Top">
+            VerticalAlignment="Top"
+            Visibility="{x:Bind ViewModel.IsMediaControlShowReverse, Mode=OneWay}">
             <TextBlock FontSize="30" FontWeight="SemiBold" Text="播放一些音乐吧。" />
-            <Button Margin="0,10,0,0" Click="OpenMusicFile">
+            <Button Margin="0,10,0,0" Command="{x:Bind ViewModel.OpenAndPlayMusicCommand}">
                 <Button.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Margin="0,0,5,0" FontFamily="Segoe MDL2 Assets" Glyph="&#xE1A5;" />
@@ -235,19 +238,17 @@
             Source="{x:Bind MusicInfomation.MusicImageProperties, Mode=OneWay}"
             Stretch="UniformToFill" />
 
-        <Grid HorizontalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <Image
                 Width="Auto"
                 Height="200"
-                Margin="0,0,10,0"
+                Margin="0,0,0,10"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
                 Source="{x:Bind MusicInfomation.MusicImageProperties, Mode=OneWay}"
-                Stretch="Fill" />
-            <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                Stretch="Uniform" />
+
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid.RowDefinitions>
                     <RowDefinition />
                     <RowDefinition />
@@ -255,19 +256,22 @@
                 <TextBlock
                     x:Name="musicName"
                     Grid.Row="0"
+                    HorizontalAlignment="Center"
                     FontSize="18"
                     Text="{x:Bind MusicInfomation.MusicTitleProperties, Mode=OneWay}"
+                    TextAlignment="Center"
                     TextWrapping="Wrap" />
                 <TextBlock
                     x:Name="musicAlbumArtist"
                     Grid.Row="1"
-                    Margin="0,0,0,5"
+                    HorizontalAlignment="Center"
                     FontSize="16"
                     FontWeight="Bold"
                     Text="{x:Bind MusicInfomation.MusicAlbumArtistProperties, Mode=OneWay}"
+                    TextAlignment="Center"
                     TextWrapping="Wrap" />
             </Grid>
-        </Grid>
+        </StackPanel>
 
         <StackPanel
             Margin="0,0,0,10"
@@ -276,15 +280,13 @@
             Orientation="Horizontal">
             <Button
                 x:Name="muteButton"
-                Width="35"
-                Height="35"
                 Margin="0,0,5,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="Transparent"
-                Click="MuteMusic"
+                Command="{x:Bind ViewModel.MuteCommand}"
                 Style="{StaticResource ButtonFontIconStyle}">
-                <FontIcon FontSize="16" Glyph="{x:Bind volumeGlyphState.VolumeGlyph, Mode=OneWay}" />
+                <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.VolumeGlyphState.VolumeGlyph, Mode=OneWay}" />
             </Button>
 
             <Slider
@@ -299,15 +301,13 @@
             <Button
                 x:Name="openMusicButton"
                 Margin="0,0,5,0"
-                Click="OpenMusicFile"
+                Command="{x:Bind ViewModel.OpenAndPlayMusicCommand}"
                 Content="&#xE1A5;"
                 Style="{StaticResource ButtonFontIconStyle}" />
 
             <Button
                 x:Name="moreOptionsFlyoutButton"
                 Grid.Column="2"
-                Width="35"
-                Height="35"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="Transparent"
@@ -320,7 +320,7 @@
                             <Button
                                 x:Name="stopPlayingButton"
                                 Background="Transparent"
-                                Click="StopMusic"
+                                Command="{x:Bind ViewModel.StopMusicCommand}"
                                 Style="{StaticResource ButtonRevealStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
@@ -380,19 +380,13 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-            <Grid.Resources>
-                <Style x:Key="musicControlButtonStyle" BasedOn="{StaticResource ButtonFontIconStyle}" TargetType="Button">
-                    <Setter Property="Height" Value="51" />
-                    <Setter Property="Width" Value="51" />
-                </Style>
-            </Grid.Resources>
-
             <StackPanel
                 x:Name="mediaControlStackPanel"
                 Margin="0,8,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
-                Orientation="Horizontal">
+                Orientation="Horizontal"
+                Visibility="{x:Bind ViewModel.IsMediaControlShow, Converter={StaticResource BoolToVisibility}, Mode=OneWay}">
                 <ToggleButton
                     x:Name="shuffleMusicToggleButton"
                     Command="{x:Bind ViewModel.ShuffleMusicCommand}"
@@ -402,39 +396,35 @@
 
                 <Button
                     x:Name="previousMusicButton"
-                    Width="35"
-                    Height="35"
                     Margin="5,0,0,0"
                     Command="{x:Bind ViewModel.PreviousMusicCommand}"
                     Content="&#xE100;"
-                    FontSize="20"
-                    Style="{StaticResource musicControlButtonStyle}" />
+                    Style="{StaticResource ButtonFontIconStyle}" />
 
                 <Button
                     x:Name="pausePlayingButton"
+                    Width="51"
+                    Height="51"
                     Margin="6,0,6,0"
                     BorderBrush="#9f9f9f"
                     BorderThickness="2"
                     Command="{x:Bind ViewModel.PlayPauseMusicCommand}"
-                    Content="&#xE102;"
-                    FontSize="27"
-                    Style="{StaticResource musicControlButtonStyle}"
-                    ToolTipService.ToolTip="{x:Bind NowPlayingProperties, Mode=OneWay}">
+                    Style="{StaticResource ButtonFontIconStyle}"
+                    ToolTipService.ToolTip="{x:Bind ViewModel.NowPlayingProperties, Mode=OneWay}">
                     <Windows10FallCreatorsUpdate:Button.KeyboardAccelerators>
                         <Windows10FallCreatorsUpdate:KeyboardAccelerator Key="Space" Modifiers="None" />
                         <Windows10FallCreatorsUpdate:KeyboardAccelerator Key="P" Modifiers="Control" />
                     </Windows10FallCreatorsUpdate:Button.KeyboardAccelerators>
+
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="27" Glyph="{x:Bind ViewModel.PausePlayingButtonIcon, Mode=OneWay}" />
                 </Button>
-                
+
                 <Button
                     x:Name="nextMusicButton"
-                    Width="35"
-                    Height="35"
                     Margin="0,0,5,0"
                     Command="{x:Bind ViewModel.NextMusicCommand}"
                     Content="&#xE101;"
-                    FontSize="20"
-                    Style="{StaticResource musicControlButtonStyle}" />
+                    Style="{StaticResource ButtonFontIconStyle}" />
 
                 <ToggleButton
                     x:Name="repeatMusicButton"
@@ -442,8 +432,8 @@
                     CommandParameter="{x:Bind repeatMusicButton.IsChecked, Mode=OneWay}"
                     IsThreeState="True"
                     Style="{StaticResource ToggleButtonButtonFontIconStyle}"
-                    ToolTipService.ToolTip="{x:Bind ViewModel.RepeatingMusicProperties, Mode=OneWay}" >
-                    <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.RepeatButtonIconString,Mode=OneWay}" FontFamily="Segoe MDL2 Assets"/>
+                    ToolTipService.ToolTip="{x:Bind ViewModel.RepeatingMusicProperties, Mode=OneWay}">
+                    <FontIcon FontFamily="Segoe MDL2 Assets" FontSize="16" Glyph="{x:Bind ViewModel.RepeatButtonIconString, Mode=OneWay}" />
                 </ToggleButton>
             </StackPanel>
 
@@ -452,7 +442,8 @@
                 Grid.Row="1"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Orientation="Horizontal">
+                Orientation="Horizontal"
+                Visibility="{x:Bind ViewModel.IsMediaControlShow, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock
                     x:Name="musicNowPlayingTimeTextBlock"
                     Grid.Column="0"
@@ -461,7 +452,7 @@
                     VerticalAlignment="Center"
                     FontSize="12"
                     Foreground="White"
-                    Text="0:00" />
+                    Text="{x:Bind ViewModel.TimeTextBlockText, Mode=OneWay}" />
                 <Slider
                     x:Name="processSlider"
                     Grid.Column="1"
@@ -469,9 +460,11 @@
                     Margin="5,0,5,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
+                    IsEnabled="{x:Bind ViewModel.IsMediaControlShow, Mode=OneWay}"
                     IsThumbToolTipEnabled="False"
                     Maximum="{x:Bind MusicInfomation.MusicDurationProperties, Mode=OneWay}"
-                    ValueChanged="processSlider_ValueChanged" />
+                    ValueChanged="processSlider_ValueChanged"
+                    Value="{x:Bind ViewModel.ProcessSliderValue, Mode=OneWay}" />
                 <TextBlock
                     Grid.Column="2"
                     Margin="0,0,20,0"
@@ -482,7 +475,7 @@
                     Text="{x:Bind MusicInfomation.MusicLenthProperties, Mode=OneWay}" />
             </StackPanel>
         </Grid>
-        
+
         <TextBlock
             x:Name="titleTextBlock"
             Grid.Row="0"

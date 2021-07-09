@@ -18,7 +18,7 @@ namespace LiveMusicLite.Services
     public class MusicInfomation : DependencyObject, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private MusicService MusicService;
+        private readonly MusicService MusicService;
 
         /// <summary>
         /// 播放器音量,默认值为1
@@ -100,10 +100,7 @@ namespace LiveMusicLite.Services
         public double VolumeInSliderProperties
         {
             get => MusicVolumeProperties * 100;
-            set
-            {
-                OnPropertiesChanged();
-            }
+            set => OnPropertiesChanged();
         }
 
         /// <summary>

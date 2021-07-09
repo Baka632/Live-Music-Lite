@@ -10,6 +10,8 @@ namespace LiveMusicLite.Commands
 {
     public class MediaCommand : DelegateCommand
     {
+        public event Action<MediaCommandExecutedEventArgs> CommandExecuted;
+
         public MediaCommand(MusicService musicService, MediaCommandType type)
         {
             switch (type)
@@ -51,11 +53,17 @@ namespace LiveMusicLite.Commands
                     ExecuteAction = (object obj) => musicService.ShuffleMusic();
                     break;
                 case MediaCommandType.Mute:
-                    ExecuteAction = (object obj) => musicService.MediaPlayer.IsMuted = (musicService.MediaPlayer.IsMuted == false);
+                    ExecuteAction = (object obj) => musicService.MediaPlayer.IsMuted = musicService.MediaPlayer.IsMuted == false;
                     break;
                 default:
                     break;
             }
+        }
+
+        public override void Execute(object parameter)
+        {
+            base.Execute(parameter);
+            CommandExecuted?.Invoke(new MediaCommandExecutedEventArgs() { Parameter = parameter });
         }
     }
 }
