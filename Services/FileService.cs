@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Toolkit.Uwp.Helpers;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -33,11 +34,15 @@ namespace LiveMusicLite.Services
 
             string fileName = name.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
             StorageFolder folder = ApplicationData.Current.TemporaryFolder;
+            if (await folder.FileExistsAsync($"{fileName}.png"))
+            {
+                return (await folder.GetFileAsync($"{fileName}.png")).Path;
+            }
             StorageFile file = await folder.CreateFileAsync($"{fileName}.png", CreationCollisionOption.OpenIfExists);
-
+            
             Stream fileStream = (await file.OpenAsync(FileAccessMode.ReadWrite)).AsStreamForWrite();
             Stream _stream = stream.AsStreamForRead();
-            _stream.Seek(0, SeekOrigin.Begin);
+            _ = _stream.Seek(0, SeekOrigin.Begin);
             await _stream.CopyToAsync(fileStream);
             await fileStream.FlushAsync();
             fileStream.Dispose();
