@@ -56,7 +56,7 @@ namespace LiveMusicLite
         /// 指示鼠标指针是否在拖动进度条的值
         /// </summary>
         public static bool IsPointerEntered = false;
-        private MainPageViewModel ViewModel { get; }
+        internal MainPageViewModel ViewModel { get; }
 
         /// <summary>
         /// 初始化MainPage类的新实例
@@ -93,7 +93,7 @@ namespace LiveMusicLite
         private void UIElement_OnPointerReleased(object sender, PointerRoutedEventArgs e)
         {
             MusicService.MediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
-            musicNowPlayingTimeTextBlock.Text = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+            ViewModel.TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
             IsPointerEntered = false;
         }
 
@@ -106,7 +106,7 @@ namespace LiveMusicLite
         {
             if (IsPointerEntered == false)
             {
-                musicNowPlayingTimeTextBlock.Text = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+                ViewModel.TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
             }
         }
 
@@ -132,7 +132,7 @@ namespace LiveMusicLite
             SliderNewValue = e.NewValue;
             if (IsPointerEntered)
             {
-                musicNowPlayingTimeTextBlock.Text = TimeSpan.FromSeconds(e.NewValue).ToString(@"m\:ss");
+                ViewModel.TimeTextBlockText = TimeSpan.FromSeconds(e.NewValue).ToString(@"m\:ss");
             }
         }
 

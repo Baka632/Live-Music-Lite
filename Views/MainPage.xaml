@@ -19,23 +19,28 @@
             <Style x:Key="ButtonFontIconStyle" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontSize" Value="17" />
                 <Setter Property="Height" Value="40" />
                 <Setter Property="Width" Value="40" />
+                <Setter Property="Padding" Value="0" />
             </Style>
-            <Windows10version1809:Style x:Key="ToggleButtonButtonFontIconStyle" BasedOn="{StaticResource ToggleButtonRevealStyle}" TargetType="ToggleButton">
+            <Style x:Key="MediaControlButtonStyle" BasedOn="{StaticResource ButtonFontIconStyle}" TargetType="Button">
+                <Setter Property="FontSize" Value="18" />
+            </Style>
+            <Style x:Key="ToggleButtonButtonFontIconStyle" BasedOn="{StaticResource ToggleButtonRevealStyle}" TargetType="ToggleButton">
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
                 <Setter Property="Foreground" Value="White" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontSize" Value="16" />
                 <Setter Property="Height" Value="40" />
                 <Setter Property="Width" Value="40" />
-                <Setter Property="CornerRadius" Value="2" />
-            </Windows10version1809:Style>
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
             <SolidColorBrush x:Key="ToggleButtonUncheckedCheckedIndeterminateBackground" Color="{ThemeResource SystemAccentColor}" />
             <Style x:Key="ToggleButtonRevealStyle" TargetType="ToggleButton">
                 <Setter Property="Background" Value="{ThemeResource ToggleButtonRevealBackground}" />
-                <Setter Property="Foreground" Value="{ThemeResource ToggleButtonForeground}" />
+                <Setter Property="Foreground" Value="{ThemeResource ToggleButtonForegroundThemeBrush}" />
                 <Setter Property="BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrush}" />
                 <Setter Property="BorderThickness" Value="{ThemeResource ToggleButtonRevealBorderThemeThickness}" />
                 <Setter Property="Padding" Value="{ThemeResource ButtonPadding}" />
@@ -281,12 +286,13 @@
             <Button
                 x:Name="muteButton"
                 Margin="0,0,5,0"
+                Padding="0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="Transparent"
                 Command="{x:Bind ViewModel.MuteCommand}"
                 Style="{StaticResource ButtonFontIconStyle}">
-                <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.VolumeGlyphState.VolumeGlyph, Mode=OneWay}" />
+                <FontIcon FontSize="17" Glyph="{x:Bind ViewModel.VolumeGlyphState.VolumeGlyph, Mode=OneWay}" />
             </Button>
 
             <Slider
@@ -399,7 +405,7 @@
                     Margin="5,0,0,0"
                     Command="{x:Bind ViewModel.PreviousMusicCommand}"
                     Content="&#xE100;"
-                    Style="{StaticResource ButtonFontIconStyle}" />
+                    Style="{StaticResource MediaControlButtonStyle}" />
 
                 <Button
                     x:Name="pausePlayingButton"
@@ -409,7 +415,7 @@
                     BorderBrush="#9f9f9f"
                     BorderThickness="2"
                     Command="{x:Bind ViewModel.PlayPauseMusicCommand}"
-                    Style="{StaticResource ButtonFontIconStyle}"
+                    Style="{StaticResource MediaControlButtonStyle}"
                     ToolTipService.ToolTip="{x:Bind ViewModel.NowPlayingProperties, Mode=OneWay}">
                     <Windows10FallCreatorsUpdate:Button.KeyboardAccelerators>
                         <Windows10FallCreatorsUpdate:KeyboardAccelerator Key="Space" Modifiers="None" />
@@ -422,9 +428,10 @@
                 <Button
                     x:Name="nextMusicButton"
                     Margin="0,0,5,0"
+                    Padding="0"
                     Command="{x:Bind ViewModel.NextMusicCommand}"
                     Content="&#xE101;"
-                    Style="{StaticResource ButtonFontIconStyle}" />
+                    Style="{StaticResource MediaControlButtonStyle}" />
 
                 <ToggleButton
                     x:Name="repeatMusicButton"

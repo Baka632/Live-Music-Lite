@@ -31,7 +31,7 @@ namespace LiveMusicLite.Services
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            string fileName = name.Replace(":", string.Empty).Replace(" / ", string.Empty).Replace("\\", string.Empty).Replace(" ? ", string.Empty).Replace(" * ", string.Empty).Replace(" | ", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
+            string fileName = name.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
             StorageFolder folder = ApplicationData.Current.TemporaryFolder;
             StorageFile file = await folder.CreateFileAsync($"{fileName}.png", CreationCollisionOption.OpenIfExists);
 

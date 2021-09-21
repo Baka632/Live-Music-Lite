@@ -155,7 +155,15 @@ namespace LiveMusicLite
                 frame = new Frame();
                 Window.Current.Content = frame;
             }
-            frame.Navigate(typeof(MainPage), file);
+
+            if (frame.Content is MainPage page)
+            {
+                page.ViewModel.OpenAndPlayMusicCommand.Execute(file);
+            }
+            else
+            {
+                _ = frame.Navigate(typeof(MainPage), file);
+            }
             Window.Current.Activate();
         }
 
