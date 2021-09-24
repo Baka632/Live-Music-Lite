@@ -31,6 +31,8 @@ namespace LiveMusicLite.Services
             }
         }
 
+        private bool IsFirstTimeOpenMusic = true;
+
         /// <summary>
         /// 初始化MusicService类的新实例
         /// </summary>
@@ -39,9 +41,22 @@ namespace LiveMusicLite.Services
             MediaPlayer.AutoPlay = true;
             MediaPlayer.AudioCategory = MediaPlayerAudioCategory.Media;
             MediaPlaybackList.MaxPlayedItemsToKeepOpen = 5;
+            MediaPlaybackList.Items.VectorChanged += OnMediaPlayBackListItemsChanged;
             MediaPlayer.Source = MediaPlaybackList;
             MediaPlayer.PlaybackSession.PlaybackStateChanged += OnCurrentStateChanged;
             MediaPlaybackState = MediaPlayer.PlaybackSession.PlaybackState;
+        }
+
+        private void OnMediaPlayBackListItemsChanged(Windows.Foundation.Collections.IObservableVector<MediaPlaybackItem> sender, Windows.Foundation.Collections.IVectorChangedEventArgs @event)
+        {
+            if (IsFirstTimeOpenMusic)
+            {
+                if (MediaPlaybackState != MediaPlaybackState.Playing)
+                {
+                    PlayMusic();
+                }
+                IsFirstTimeOpenMusic = false;
+            }
         }
 
         private void OnCurrentStateChanged(MediaPlaybackSession session, object args)
@@ -57,6 +72,7 @@ namespace LiveMusicLite.Services
             MediaPlayer.Pause();
             MediaPlayer.PlaybackSession.Position = TimeSpan.Zero;
             MediaPlaybackList.Items.Clear();
+            IsFirstTimeOpenMusic = true;
         }
 
         /// <summary>
@@ -169,11 +185,6 @@ namespace LiveMusicLite.Services
         public async Task AddMusicAsync(MediaPlaybackItem item)
         {
             await Task.Run(() => MediaPlaybackList.Items.Add(item));
-        }
-
-        public void ClearMediaPlaybackList()
-        {
-            MediaPlaybackList.Items.Clear();
         }
 
         public void Dispose()

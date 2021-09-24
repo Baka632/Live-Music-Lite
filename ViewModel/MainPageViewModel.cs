@@ -317,18 +317,13 @@ namespace LiveMusicLite.ViewModel
                     MusicInfomation.ResetAllMusicProperties();
                     if (MusicService.MediaPlaybackList.Items != null)
                     {
-                        MusicService.ClearMediaPlaybackList();
+                        MusicService.StopMusic();
                     }
                     await FileService.GetMusicPropertiesAndPlayAysnc(fileList, MusicService.MediaPlaybackList);
                 }
                 else
                 {
                     await FileService.GetMusicPropertiesAndPlayAysnc(fileList, MusicService.MediaPlaybackList);
-                }
-
-                if (MusicService.MediaPlaybackState != MediaPlaybackState.Playing)
-                {
-                    MusicService.PlayMusic();
                 }
             }
         }
