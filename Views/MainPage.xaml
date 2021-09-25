@@ -258,23 +258,36 @@
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <TextBlock
+                
+                <!--<TextBlock
                     x:Name="musicName"
                     Grid.Row="0"
                     HorizontalAlignment="Center"
                     FontSize="18"
                     Text="{x:Bind MusicInfomation.MusicTitleProperties, Mode=OneWay}"
                     TextAlignment="Center"
-                    TextWrapping="Wrap" />
+                    TextWrapping="Wrap" />-->
+                
+                <StackPanel x:Name="musicNameStackPanel" Grid.Row="0" HorizontalAlignment="Center" Width="200" PointerEntered="musicNameStackPanel_PointerEntered">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="{x:Bind musicNameInnerStackPanelHorizontalAlignment,Mode=OneWay}">
+                        <TextBlock x:Name="musicName" FontSize="18" Text="{x:Bind HandleText(MusicInfomation.MusicTitleProperties), Mode=OneWay}">
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform X="0" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+                
                 <TextBlock
                     x:Name="musicAlbumArtist"
                     Grid.Row="1"
                     HorizontalAlignment="Center"
                     FontSize="16"
+                    Width="250"
                     FontWeight="Bold"
                     Text="{x:Bind MusicInfomation.MusicAlbumArtistProperties, Mode=OneWay}"
                     TextAlignment="Center"
-                    TextWrapping="Wrap" />
+                    TextTrimming="WordEllipsis" />
             </Grid>
         </StackPanel>
 

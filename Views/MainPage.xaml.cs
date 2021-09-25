@@ -20,6 +20,9 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using LiveMusicLite.ViewModel;
 using LiveMusicLite.Services;
+using Microsoft.Graphics.Canvas.Text;
+using Microsoft.Graphics.Canvas;
+using Windows.UI.Xaml.Media.Animation;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -47,6 +50,10 @@ namespace LiveMusicLite
         /// 在主界面上显示的音乐图片的列表
         /// </summary>
         ObservableCollection<Image> musicImages = new ObservableCollection<Image>();
+        Storyboard _scrollAnimation;
+        private bool IsTextScrolling = false;
+        private bool AllowTextScrolling = false;
+        private HorizontalAlignment _musicNameInnerStackPanelHorizontalAlignment = HorizontalAlignment.Center;
 
         /// <summary>
         /// 新的进度条值
@@ -70,12 +77,34 @@ namespace LiveMusicLite
             App.MainPageViewModel = ViewModel;
 
             MusicService.MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
+            MusicService.MediaPlaybackList.CurrentItemChanged += MediaPlaybackList_CurrentItemChanged;
 
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += dispatcherTimer_Tick;
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             processSlider.AddHandler(PointerReleasedEvent, new PointerEventHandler(UIElement_OnPointerReleased), true);
             processSlider.AddHandler(PointerPressedEvent, new PointerEventHandler(UIElement_EnterPressedReleased), true);
+        }
+
+
+
+        public HorizontalAlignment musicNameInnerStackPanelHorizontalAlignment
+        {
+            get => _musicNameInnerStackPanelHorizontalAlignment;
+            set
+            {
+                _musicNameInnerStackPanelHorizontalAlignment = value;
+                OnPropertiesChanged();
+            }
+        }
+
+        private async void MediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+        {
+            if (_scrollAnimation != null)
+            {
+                IsTextScrolling = false;
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => _scrollAnimation.Stop());
+            }
         }
 
         /// <summary>
@@ -196,62 +225,77 @@ namespace LiveMusicLite
             }
         }
 
-        private async Task GetMusicImages()
+        private string HandleText(string text)
         {
-            int x = 0;
-            StorageFolder musicFolder = KnownFolders.MusicLibrary;
-            List<StorageFile> list =
-                (
-                    from StorageFile file
-                    in await musicFolder.GetFilesAsync(CommonFileQuery.OrderByName)
-                    where file.ContentType == "audio/mpeg" || file.ContentType == "audio/x-wav"
-                    select file
-                ).AsParallel().ToList();
-            List<string> albumList = new List<string>();
-
-            await Task.Run(async () =>
+            CanvasTextFormat textFormat = new CanvasTextFormat
             {
-                for (int i = 0; i < list.Count; x++)
-                {
-                    if (i == 20 && Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Mobile")
-                    {
-                        break;
-                    }
-                    else if (i == 72)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        using (InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream())
-                        {
-                            MusicProperties musicProperties = await list[x].Properties.GetMusicPropertiesAsync();
-                            if (albumList.Contains(musicProperties.Album) == false)
-                            {
-                                StorageFile file = list[x];
-                                var thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
-                                await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
-                                randomAccessStream.Seek(0);
-                                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-                                 {
-                                     BitmapImage bitmapImage = new BitmapImage();
-                                     await bitmapImage.SetSourceAsync(randomAccessStream);
-                                     Image image = new Image
-                                     {
-                                         Source = bitmapImage,
-                                         Stretch = Stretch.UniformToFill,
-                                         Height = 100,
-                                         Width = 100,
-                                     };
-                                     musicImages.Add(image);
-                                     albumList.Add(musicProperties.Album);
-                                 });
-                                i++;
-                            }
-                        }
-                    }
-                }
-            });
+                FontSize = (float)musicName.FontSize,
+                FontFamily = musicName.FontFamily.Source,
+                Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+                WordWrapping = CanvasWordWrapping.NoWrap
+            };
+
+            double textWidth = MeasureTextSize(text, textFormat, (float)musicNameStackPanel.ActualWidth);
+            if (textWidth >= musicNameStackPanel.ActualWidth)
+            {
+                AllowTextScrolling = true;
+                musicNameInnerStackPanelHorizontalAlignment = HorizontalAlignment.Left;
+                return $"{text}     {text}";
+            }
+            else
+            {
+                AllowTextScrolling = false;
+                musicNameInnerStackPanelHorizontalAlignment = HorizontalAlignment.Center;
+                return text;
+            }
+        }
+
+        private double MeasureTextSize(string text, CanvasTextFormat textFormat, float limitedToWidth = 0.0f)
+        {
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+
+            float width = float.IsNaN(limitedToWidth) || limitedToWidth < 0 ? 0 : limitedToWidth;
+            var layout = new CanvasTextLayout(device, text, textFormat, width, 0);
+
+            return layout.LayoutBounds.Width;
+        }
+
+        public void AnimationInit()
+        {
+            _scrollAnimation = new Storyboard();
+            _scrollAnimation.Completed += _scrollAnimation_Completed;
+            DoubleAnimation animation = new DoubleAnimation
+            {
+                Duration = TimeSpan.FromSeconds(musicName.ActualWidth / musicName.FontSize / 4),
+                //animation.RepeatBehavior = new RepeatBehavior(1);
+                From = 0,
+                // Here you need to calculate based on the number of spaces and the current FontSize
+                To = -((musicName.ActualWidth / 2) + (musicName.FontSize / 2))
+            };
+            Storyboard.SetTarget(animation, musicName);
+            Storyboard.SetTargetProperty(animation, "(UIElement.RenderTransform).(TranslateTransform.X)");
+            _scrollAnimation.Children.Add(animation);
+        }
+
+        private void _scrollAnimation_Completed(object sender, object e)
+        {
+            IsTextScrolling = false;
+            _scrollAnimation.Stop();
+        }
+
+        private void musicNameStackPanel_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (AllowTextScrolling == false)
+            {
+                return;
+            }
+
+            if (IsTextScrolling == false)
+            {
+                AnimationInit();
+                _scrollAnimation.Begin();
+                IsTextScrolling = true;
+            }
         }
     }
 }

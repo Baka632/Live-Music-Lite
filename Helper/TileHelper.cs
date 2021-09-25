@@ -17,8 +17,16 @@ namespace LiveMusicLite.Helper
             // Create the tile notification
             TileNotification tileNotif = new TileNotification(tileContent.GetXml());
 
-            // And send the notification to the primary tile
-            TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
+            try
+            {
+                // And send the notification to the primary tile
+                TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("磁贴显示出现了故障,这真是令人尴尬");
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>
