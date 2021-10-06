@@ -186,10 +186,11 @@ namespace LiveMusicLite
                 case MediaPlaybackState.Paused:
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        if (MusicService.MediaPlaybackList.Items.Count == MusicService.MediaPlaybackList.CurrentItemIndex + 1 && (int)processSlider.Value == (int)processSlider.Maximum)
+                        if (MusicService.MediaPlaybackList.Items.Count == MusicService.MediaPlaybackList.CurrentItemIndex + 1 && processSlider.Value == processSlider.Maximum)
                         {
                             dispatcherTimer.Stop();
                             processSlider.Value = 0;
+                            ViewModel.TimeTextBlockText = "0:00";
                         }
                     });
                     break;
@@ -260,7 +261,37 @@ namespace LiveMusicLite
             return layout.LayoutBounds.Width;
         }
 
-        public void AnimationInit()
+        private void _scrollAnimation_Completed(object sender, object e)
+        {
+            IsTextScrolling = false;
+            _scrollAnimation.Stop();
+        }
+
+        private void musicNameStackPanel_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            StartTextScrollAnimation();
+        }
+
+        private void StartTextScrollAnimation()
+        {
+            if (AllowTextScrolling == false)
+            {
+                return;
+            }
+
+            if (IsTextScrolling == false)
+            {
+                AnimationInit();
+                _scrollAnimation.Begin();
+                IsTextScrolling = true;
+            }
+        }
+        private void musicName_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            StartTextScrollAnimation();
+        }
+
+        private void AnimationInit()
         {
             _scrollAnimation = new Storyboard();
             _scrollAnimation.Completed += _scrollAnimation_Completed;
@@ -277,25 +308,9 @@ namespace LiveMusicLite
             _scrollAnimation.Children.Add(animation);
         }
 
-        private void _scrollAnimation_Completed(object sender, object e)
+        private void PlayRateSelectionChanged(object sender, ItemClickEventArgs e)
         {
-            IsTextScrolling = false;
-            _scrollAnimation.Stop();
-        }
-
-        private void musicNameStackPanel_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            if (AllowTextScrolling == false)
-            {
-                return;
-            }
-
-            if (IsTextScrolling == false)
-            {
-                AnimationInit();
-                _scrollAnimation.Begin();
-                IsTextScrolling = true;
-            }
+            ViewModel.ChangePlayRateCommand.Execute(e.ClickedItem);
         }
     }
 }

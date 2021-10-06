@@ -169,6 +169,11 @@ namespace LiveMusicLite.Services
             }
         }
 
+        /// <summary>
+        /// 异步添加多个音乐
+        /// </summary>
+        /// <param name="items">要添加的音乐项</param>
+        /// <returns></returns>
         public async Task AddMusicAsync(IList<MediaPlaybackItem> items)
         {
             await Task.Run(() => AddItems(items));
@@ -181,11 +186,27 @@ namespace LiveMusicLite.Services
                 }
             }
         }
-        
+
+        /// <summary>
+        /// 异步添加音乐
+        /// </summary>
+        /// <param name="item">要添加的音乐项</param>
+        /// <returns></returns>
         public async Task AddMusicAsync(MediaPlaybackItem item)
         {
             await Task.Run(() => MediaPlaybackList.Items.Add(item));
         }
+
+        /// <summary>
+        /// 设置播放器的播放倍数
+        /// </summary>
+        /// <param name="rate">播放倍数</param>
+        public void SetMediaPlayerPlayRate(double rate)
+        {
+            MediaPlayer.PlaybackSession.PlaybackRate = rate;
+        }
+
+        public void
 
         public void Dispose()
         {

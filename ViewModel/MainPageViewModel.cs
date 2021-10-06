@@ -1,9 +1,11 @@
 ﻿using LiveMusicLite.Commands;
 using LiveMusicLite.Helper;
+using LiveMusicLite.Models;
 using LiveMusicLite.Services;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,13 +46,14 @@ namespace LiveMusicLite.ViewModel
         public MediaCommand PreviousMusicCommand { get; }
         public MediaCommand MuteCommand { get; set; }
         public MediaCommand ShuffleMusicCommand { get; }
+        public MediaCommand ChangePlayRateCommand { get; }
         public DelegateCommand OpenAndPlayMusicCommand { get; }
         public DelegateCommand OpenSettingsCommand { get; } = new DelegateCommand()
         {
             ExecuteAction = async (object obj) =>
             {
                 SettingsContentDialog settingsContentDialog = new SettingsContentDialog();
-                await settingsContentDialog.ShowAsync();
+                _ = await settingsContentDialog.ShowAsync();
             }
         };
         public VolumeGlyphState VolumeGlyphState { get; }
@@ -165,27 +168,28 @@ namespace LiveMusicLite.ViewModel
         {
             MusicService = new MusicService();
             MusicInfomation = new MusicInfomation(MusicService);
-            MuteCommand = new MediaCommand(MusicService, Models.MediaCommandType.Mute);
-            RepeatMusicCommand = new MediaCommand(MusicService, Models.MediaCommandType.Repeat);
+            MuteCommand = new MediaCommand(MusicService, MediaCommandType.Mute);
+            RepeatMusicCommand = new MediaCommand(MusicService, MediaCommandType.Repeat);
             RepeatMusicCommand.CommandExecuted += OnRepeatMusicCommandExecuted;
-            PlayPauseMusicCommand = new MediaCommand(MusicService, Models.MediaCommandType.PlayAndPause);
-            NextMusicCommand = new MediaCommand(MusicService, Models.MediaCommandType.Next);
-            PreviousMusicCommand = new MediaCommand(MusicService, Models.MediaCommandType.Previous);
-            ShuffleMusicCommand = new MediaCommand(MusicService, Models.MediaCommandType.Shuffle);
-            StopMusicCommand = new MediaCommand(MusicService, Models.MediaCommandType.Stop)
+            PlayPauseMusicCommand = new MediaCommand(MusicService, MediaCommandType.PlayAndPause);
+            NextMusicCommand = new MediaCommand(MusicService, MediaCommandType.Next);
+            PreviousMusicCommand = new MediaCommand(MusicService, MediaCommandType.Previous);
+            ShuffleMusicCommand = new MediaCommand(MusicService, MediaCommandType.Shuffle);
+            StopMusicCommand = new MediaCommand(MusicService, MediaCommandType.Stop)
             {
                 ExecuteAction = (object obj) =>
                 {
                     IsMediaControlShow = false;
                     MusicService.StopMusic();
                     MusicInfomation.ResetAllMusicProperties();
-                    TileUpdateManager.CreateTileUpdaterForApplication().Clear();
+                    TileHelper.DeleteTile();
                 },
                 CanExecuteFunc = (object obj) =>
                 {
                     return IsMediaControlShow;
                 }
             };
+            ChangePlayRateCommand = new MediaCommand(MusicService, MediaCommandType.ChangePlayRate);
             ShuffleMusicCommand.CommandExecuted += OnShuffleMusicCommandExecuted;
             OpenAndPlayMusicCommand = new DelegateCommand() { ExecuteAction = async (object obj) => await OpenAndPlayMusicFile(obj) };
             FileService = new FileService();
@@ -241,7 +245,7 @@ namespace LiveMusicLite.ViewModel
                 MusicInfomation.MusicAlbumProperties = currentMusicInfomation.AlbumTitle;
                 await RunOnMainThread(async () => await WorkOnMainThread(musicThumbnail));
                 _ = await FileService.CreateMusicAlbumCoverFile(currentMusicInfomation.AlbumTitle, musicThumbnail);
-                SetTileSource();
+                await SetTileSourceAsync();
             }
             else
             {
@@ -319,281 +323,78 @@ namespace LiveMusicLite.ViewModel
                     {
                         MusicService.StopMusic();
                     }
-                    await FileService.GetMusicPropertiesAndPlayAysnc(fileList, MusicService.MediaPlaybackList);
                 }
-                else
-                {
-                    await FileService.GetMusicPropertiesAndPlayAysnc(fileList, MusicService.MediaPlaybackList);
-                }
+                await FileService.GetMusicPropertiesAndPlayAysnc(fileList, MusicService.MediaPlaybackList);
             }
         }
 
         /// <summary>
         /// 设置磁贴的源
         /// </summary>
-        private async void SetTileSource()
+        private async Task SetTileSourceAsync()
         {
-            string album = $"{MusicInfomation.MusicAlbumProperties.Replace(":", string.Empty).Replace(" / ", string.Empty).Replace("\\", string.Empty).Replace(" ? ", string.Empty).Replace(" * ", string.Empty).Replace(" | ", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty)}";
-            string imagePath = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg";
-            if (album == "未知专辑")
-            {
-                imagePath = (await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/NullAlbum.png"))).Path;
-            }
             if (MusicService.MediaPlaybackList.Items.Count > MusicService.MediaPlaybackList.CurrentItemIndex + 1)
             {
-                int index = (int)(MusicService.MediaPlaybackList.CurrentItemIndex + 1);
-                Windows.Media.MusicDisplayProperties MusicProps = MusicService.MediaPlaybackList.Items[index].GetDisplayProperties().MusicProperties;
-                var tileContent = new TileContent()
+                MusicDisplayProperties MusicProps;
+                if (MusicService.MediaPlaybackList.ShuffleEnabled)
                 {
-                    Visual = new TileVisual()
+                    IReadOnlyList<MediaPlaybackItem> shuffledItems = MusicService.MediaPlaybackList.ShuffledItems;
+                    int index = await Task.Run(() => shuffledItems.IndexOf(MusicService.MediaPlaybackList.CurrentItem) + 1);
+
+                    if (shuffledItems.Count > index)
                     {
-                        TileSmall = new TileBinding()
+                        MusicProps = shuffledItems[index].GetDisplayProperties().MusicProperties;
+                    }
+                    else
+                    {
+                        if (MusicService.MediaPlaybackList.AutoRepeatEnabled)
                         {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                BackgroundImage = new TileBackgroundImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
-                        },
-                        TileMedium = new TileBinding()
+                            MusicProps = shuffledItems.First().GetDisplayProperties().MusicProperties;
+                        }
+                        else
                         {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                Children =
-                                {
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicTitleProperties,
-                                        HintMaxLines = 2,
-                                        HintWrap = true,
-                                        HintAlign = AdaptiveTextAlign.Left
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumArtistProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    }
-                                },
-                                PeekImage = new TilePeekImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
-                        },
-                        TileWide = new TileBinding()
-                        {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                Children =
-                                {
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicTitleProperties,
-                                        HintStyle = AdaptiveTextStyle.Subtitle,
-                                        HintMaxLines = 1,
-                                        HintWrap = true,
-                                        HintAlign = AdaptiveTextAlign.Left
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumArtistProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    }
-                                },
-                                PeekImage = new TilePeekImage()
-                                {
-                                    Source = $"{ApplicationData.Current.TemporaryFolder.Path}\\{album}.jpg"
-                                }
-                            }
-                        },
-                        TileLarge = new TileBinding()
-                        {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                Children =
-                                    {
-                                        new AdaptiveText()
-                                        {
-                                            Text = MusicInfomation.MusicTitleProperties,
-                                            HintStyle = AdaptiveTextStyle.Title,
-                                            HintMaxLines = 2,
-                                            HintWrap = true,
-                                            HintAlign = AdaptiveTextAlign.Left
-                                        },
-                                        new AdaptiveText()
-                                        {
-                                            Text = MusicInfomation.MusicAlbumArtistProperties,
-                                            HintWrap = true
-                                        },
-                                        new AdaptiveText()
-                                        {
-                                            Text = MusicInfomation.MusicAlbumProperties,
-                                        },
-                                        new AdaptiveText()
-                                        {
-                                            Text = ""
-                                        },
-                                        new AdaptiveText()
-                                        {
-                                            Text = MusicProps.Title,
-                                            HintWrap = true,
-                                            HintAlign = AdaptiveTextAlign.Left
-                                        },
-                                        new AdaptiveText()
-                                        {
-                                        Text = MusicProps.AlbumArtist,
-                                        HintWrap = true
-                                        },
-                                        new AdaptiveText()
-                                        {
-                                            Text = MusicProps.AlbumTitle,
-                                            HintWrap = true
-                                        }
-                                    },
-                                PeekImage = new TilePeekImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
+                            TileHelper.ShowTitle(MusicInfomation.MusicTitleProperties,
+                                     MusicInfomation.MusicAlbumArtistProperties,
+                                     MusicInfomation.MusicAlbumProperties,
+                                     false);
+                            return;
                         }
                     }
-                };
-                TileHelper.ShowTitle(tileContent);
+                }
+                else
+                {
+                    int index = (int)(MusicService.MediaPlaybackList.CurrentItemIndex + 1);
+                    MusicProps = MusicService.MediaPlaybackList.Items[index].GetDisplayProperties().MusicProperties;
+                }
+                TileHelper.ShowTitle(MusicInfomation.MusicTitleProperties,
+                                     MusicInfomation.MusicAlbumArtistProperties,
+                                     MusicInfomation.MusicAlbumProperties,
+                                     true,
+                                     MusicProps.Title,
+                                     MusicProps.AlbumArtist,
+                                     MusicProps.AlbumTitle);
             }
             else
             {
-                var tileContent = new TileContent()
+                if (MusicService.MediaPlaybackList.AutoRepeatEnabled)
                 {
-                    Visual = new TileVisual()
-                    {
-                        #region TheSameToBefore
-                        TileSmall = new TileBinding()
-                        {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                BackgroundImage = new TileBackgroundImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
-                        },
-                        TileMedium = new TileBinding()
-                        {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                Children =
-                                {
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicTitleProperties,
-                                        HintMaxLines = 2,
-                                        HintWrap = true,
-                                        HintAlign = AdaptiveTextAlign.Left
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumArtistProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    }
-                                },
-                                PeekImage = new TilePeekImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
-                        },
-                        TileWide = new TileBinding()
-                        {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                Children =
-                                {
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicTitleProperties,
-                                        HintStyle = AdaptiveTextStyle.Subtitle,
-                                        HintMaxLines = 1,
-                                        HintWrap = true,
-                                        HintAlign = AdaptiveTextAlign.Left
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumArtistProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumProperties,
-                                        HintMaxLines = 1,
-                                        HintWrap = true
-                                    }
-                                },
-                                PeekImage = new TilePeekImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
-                        },
-                        #endregion
-
-                        TileLarge = new TileBinding()
-                        {
-                            Content = new TileBindingContentAdaptive()
-                            {
-                                Children =
-                                {
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicTitleProperties,
-                                        HintStyle = AdaptiveTextStyle.Title,
-                                        HintMaxLines = 2,
-                                        HintWrap = true,
-                                        HintAlign = AdaptiveTextAlign.Left
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumArtistProperties,
-                                        HintWrap = true
-                                    },
-                                    new AdaptiveText()
-                                    {
-                                        Text = MusicInfomation.MusicAlbumProperties,
-                                        HintWrap = true
-                                    }
-                                },
-                                PeekImage = new TilePeekImage()
-                                {
-                                    Source = imagePath
-                                }
-                            }
-                        }
-                    }
-                };
-                TileHelper.ShowTitle(tileContent);
+                    IReadOnlyList<MediaPlaybackItem> shuffledItems = MusicService.MediaPlaybackList.ShuffledItems;
+                    MusicDisplayProperties MusicProps = shuffledItems.First().GetDisplayProperties().MusicProperties;
+                    TileHelper.ShowTitle(MusicInfomation.MusicTitleProperties,
+                                     MusicInfomation.MusicAlbumArtistProperties,
+                                     MusicInfomation.MusicAlbumProperties,
+                                     true,
+                                     MusicProps.Title,
+                                     MusicProps.AlbumArtist,
+                                     MusicProps.AlbumTitle);
+                }
+                else
+                {
+                    TileHelper.ShowTitle(MusicInfomation.MusicTitleProperties,
+                                     MusicInfomation.MusicAlbumArtistProperties,
+                                     MusicInfomation.MusicAlbumProperties,
+                                     false);
+                }
             }
         }
 
@@ -601,6 +402,23 @@ namespace LiveMusicLite.ViewModel
         {
             await Dispatcher.RunAsync(priority, handler);
         }
+    }
 
+    internal static class IReadOnlyListExtension
+    {
+        public static int IndexOf<T>(this IReadOnlyList<T> self, T elementToFind)
+        {
+            int i = 0;
+            foreach (T element in self)
+            {
+                if (Equals(element, elementToFind))
+                {
+                    return i;
+                }
+
+                i++;
+            }
+            return -1;
+        }
     }
 }

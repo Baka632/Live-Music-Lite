@@ -55,6 +55,31 @@ namespace LiveMusicLite.Commands
                 case MediaCommandType.Mute:
                     ExecuteAction = (object obj) => musicService.MediaPlayer.IsMuted = musicService.MediaPlayer.IsMuted == false;
                     break;
+                case MediaCommandType.ChangePlayRate:
+                    ExecuteAction = (object obj) =>
+                    {
+                        double rate;
+                        switch (obj as string)
+                        {
+                            case "0.5x":
+                                rate = 0.5;
+                                break;
+                            case "1x":
+                                rate = 1;
+                                break;
+                            case "1.5x":
+                                rate = 1.5;
+                                break;
+                            case "2x":
+                                rate = 2;
+                                break;
+                            default:
+                                rate = 1;
+                                break;
+                        }
+                        musicService.SetMediaPlayerPlayRate(rate);
+                    };
+                    break;
                 default:
                     break;
             }

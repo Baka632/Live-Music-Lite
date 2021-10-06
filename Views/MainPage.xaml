@@ -90,7 +90,7 @@
                                                 <Setter Target="RootGrid.(RevealBrush.State)" Value="Pressed" />
                                                 <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundPressed}" />
                                                 <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushPressed}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundPressed}" />
+                                                <!--<Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundPressed}" />-->
                                             </VisualState.Setters>
                                             <Storyboard>
                                                 <PointerDownThemeAnimation Storyboard.TargetName="RootGrid" />
@@ -100,14 +100,14 @@
                                             <VisualState.Setters>
                                                 <Setter Target="RootGrid.Background" Value="{StaticResource ToggleButtonUncheckedCheckedIndeterminateBackground}" />
                                                 <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushDisabled}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundDisabled}" />
+                                                <!--<Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundDisabled}" />-->
                                             </VisualState.Setters>
                                         </VisualState>
                                         <VisualState x:Name="Checked">
                                             <VisualState.Setters>
                                                 <Setter Target="RootGrid.Background" Value="{StaticResource ToggleButtonUncheckedCheckedIndeterminateBackground}" />
                                                 <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushChecked}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundChecked}" />
+                                                <!--<Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundChecked}" />-->
                                             </VisualState.Setters>
                                             <Storyboard>
                                                 <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
@@ -118,7 +118,7 @@
                                                 <Setter Target="RootGrid.(RevealBrush.State)" Value="PointerOver" />
                                                 <Setter Target="RootGrid.Background" Value="{StaticResource ToggleButtonUncheckedCheckedIndeterminateBackground}" />
                                                 <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushCheckedPointerOver}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedPointerOver}" />
+                                                <!--<Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedPointerOver}" />-->
                                             </VisualState.Setters>
                                             <Storyboard>
                                                 <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
@@ -129,7 +129,7 @@
                                                 <Setter Target="RootGrid.(RevealBrush.State)" Value="Pressed" />
                                                 <Setter Target="RootGrid.Background" Value="{StaticResource ToggleButtonUncheckedCheckedIndeterminateBackground}" />
                                                 <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushCheckedPressed}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedPressed}" />
+                                                <!--<Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedPressed}" />-->
                                             </VisualState.Setters>
                                             <Storyboard>
                                                 <PointerDownThemeAnimation Storyboard.TargetName="RootGrid" />
@@ -270,7 +270,7 @@
                 
                 <StackPanel x:Name="musicNameStackPanel" Grid.Row="0" HorizontalAlignment="Center" Width="200" PointerEntered="musicNameStackPanel_PointerEntered">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="{x:Bind musicNameInnerStackPanelHorizontalAlignment,Mode=OneWay}">
-                        <TextBlock x:Name="musicName" FontSize="18" Text="{x:Bind HandleText(MusicInfomation.MusicTitleProperties), Mode=OneWay}">
+                        <TextBlock x:Name="musicName" SizeChanged="musicName_SizeChanged" FontSize="18" Text="{x:Bind HandleText(MusicInfomation.MusicTitleProperties), Mode=OneWay}">
                             <TextBlock.RenderTransform>
                                 <TranslateTransform X="0" />
                             </TextBlock.RenderTransform>
@@ -319,9 +319,9 @@
 
             <Button
                 x:Name="openMusicButton"
-                Margin="0,0,5,0"
                 Command="{x:Bind ViewModel.OpenAndPlayMusicCommand}"
                 Content="&#xE1A5;"
+                Margin="0,0,5,0"
                 Style="{StaticResource ButtonFontIconStyle}" />
 
             <Button
@@ -381,6 +381,28 @@
                     </Flyout>
                 </Button.Flyout>
             </Button>
+
+            <muxc:SplitButton Background="Transparent" Margin="5,0,0,0" Height="40">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{x:Bind playRateSelectionGridView.SelectedItem,Mode=OneWay}"/>
+                </StackPanel>
+                <muxc:SplitButton.Flyout>
+                    <Flyout Placement="Bottom">
+                        <StackPanel>
+                            <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                                <FontIcon Margin="0,0,5,0" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEC57;" />
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="播放速度"/>
+                            </StackPanel>
+                            <GridView x:Name="playRateSelectionGridView" Padding="0" ItemClick="PlayRateSelectionChanged" SelectedIndex="1" IsItemClickEnabled="True">
+                                <x:String>0.5x</x:String>
+                                <x:String>1x</x:String>
+                                <x:String>1.5x</x:String>
+                                <x:String>2x</x:String>
+                            </GridView>
+                        </StackPanel>
+                    </Flyout>
+                </muxc:SplitButton.Flyout>
+            </muxc:SplitButton>
         </StackPanel>
 
 
