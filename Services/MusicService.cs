@@ -31,6 +31,45 @@ namespace LiveMusicLite.Services
             }
         }
 
+        /// <summary>
+        /// 播放器音量,默认值为1
+        /// </summary>
+        private double MusicVolume = Settings.MusicVolume;
+
+        /// <summary>
+        /// 播放器的音量属性
+        /// </summary>
+        public double MusicVolumeProperties
+        {
+            get => MusicVolume;
+            set
+            {
+                MusicVolume = value;
+                VolumeInSliderProperties = value * 100;
+                SetMusicPlayerVolume(MusicVolume);
+                OnPropertiesChanged();
+            }
+        }
+
+        public double VolumeInSliderProperties
+        {
+            get => MusicVolumeProperties * 100;
+            set => OnPropertiesChanged();
+        }
+
+        /// <summary>
+        /// 指示播放器是否循环播放的属性
+        /// </summary>
+        public bool IsShuffleEnabled
+        {
+            get => MediaPlaybackList.ShuffleEnabled;
+            set
+            {
+                MediaPlaybackList.ShuffleEnabled = value;
+                OnPropertiesChanged();
+            }
+        }
+
         private bool IsFirstTimeOpenMusic = true;
 
         /// <summary>
@@ -45,6 +84,7 @@ namespace LiveMusicLite.Services
             MediaPlayer.Source = MediaPlaybackList;
             MediaPlayer.PlaybackSession.PlaybackStateChanged += OnCurrentStateChanged;
             MediaPlaybackState = MediaPlayer.PlaybackSession.PlaybackState;
+            IsShuffleEnabled = Settings.IsShuffleEnabled;
         }
 
         private void OnMediaPlayBackListItemsChanged(Windows.Foundation.Collections.IObservableVector<MediaPlaybackItem> sender, Windows.Foundation.Collections.IVectorChangedEventArgs @event)
@@ -135,14 +175,7 @@ namespace LiveMusicLite.Services
         /// </summary>
         public void ShuffleMusic()
         {
-            if (MediaPlaybackList.ShuffleEnabled)
-            {
-                MediaPlaybackList.ShuffleEnabled = false;
-            }
-            else
-            {
-                MediaPlaybackList.ShuffleEnabled = true;
-            }
+            MediaPlaybackList.ShuffleEnabled = !MediaPlaybackList.ShuffleEnabled;
         }
 
         /// <summary>

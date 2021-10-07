@@ -135,6 +135,7 @@ namespace LiveMusicLite
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: 保存应用程序状态并停止任何后台活动
             Settings.MusicVolume = MainPageViewModel.MusicService.MediaPlayer.Volume; //保存现在的音量
+            Settings.IsShuffleEnabled = MainPageViewModel.MusicService.IsShuffleEnabled; //保存现在的是否循环播放的设置
             deferral.Complete();
         }
 

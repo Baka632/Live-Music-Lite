@@ -18,12 +18,7 @@ namespace LiveMusicLite.Services
     public class MusicInfomation : DependencyObject, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private readonly MusicService MusicService;
 
-        /// <summary>
-        /// 播放器音量,默认值为1
-        /// </summary>
-        double MusicVolume = Settings.MusicVolume;
         /// <summary>
         /// 专辑艺术家,默认值为空("")
         /// </summary>
@@ -52,9 +47,9 @@ namespace LiveMusicLite.Services
         /// <summary>
         /// 初始化MusicInfomation的新实例
         /// </summary>
-        public MusicInfomation(MusicService musicService)
+        public MusicInfomation()
         {
-            MusicService = musicService;
+            
         }
 
         /// <summary>
@@ -80,27 +75,6 @@ namespace LiveMusicLite.Services
             MusicLenthProperties = "0:00";
             MusicDurationProperties = 0;
             MusicAlbumProperties = "";
-        }
-
-        /// <summary>
-        /// 播放器的音量属性
-        /// </summary>
-        public double MusicVolumeProperties
-        {
-            get => MusicVolume;
-            set
-            {
-                MusicVolume = value;
-                VolumeInSliderProperties = value * 100;
-                MusicService.SetMusicPlayerVolume(MusicVolume);
-                OnPropertiesChanged();
-            }
-        }
-
-        public double VolumeInSliderProperties
-        {
-            get => MusicVolumeProperties * 100;
-            set => OnPropertiesChanged();
         }
 
         /// <summary>

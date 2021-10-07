@@ -46,7 +46,7 @@ namespace LiveMusicLite.Services
 
         public void ChangeVolumeGlyph()
         {
-            double MediaPlayerVolume = MusicInfomation.MusicVolumeProperties;
+            double MediaPlayerVolume = MusicService.MusicVolumeProperties;
             if (MediaPlayerVolume > 0.6)
             {
                 VolumeGlyph = "\uE995";

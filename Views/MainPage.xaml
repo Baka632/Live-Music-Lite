@@ -324,7 +324,7 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 ValueChanged="VolumeChanged"
-                Value="{x:Bind MusicInfomation.VolumeInSliderProperties, Mode=OneWay}" />
+                Value="{x:Bind MusicService.VolumeInSliderProperties, Mode=OneWay}" />
 
             <Button
                 x:Name="openMusicButton"
@@ -449,8 +449,8 @@
                 Visibility="{x:Bind ViewModel.IsMediaControlShow, Converter={StaticResource BoolToVisibility}, Mode=OneWay}">
                 <ToggleButton
                     x:Name="shuffleMusicToggleButton"
-                    Command="{x:Bind ViewModel.ShuffleMusicCommand}"
                     Content="&#xE14B;"
+                    IsChecked="{x:Bind ViewModel.MusicService.IsShuffleEnabled,Mode=TwoWay}"
                     Style="{StaticResource ToggleButtonButtonFontIconStyle}"
                     ToolTipService.ToolTip="{x:Bind ViewModel.ShufflingMusicProperties, Mode=OneWay}" />
 

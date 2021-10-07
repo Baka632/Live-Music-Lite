@@ -32,6 +32,7 @@ namespace LiveMusicLite.Services
         /// 指示在手动打开音乐时选择何种操作的值
         /// </summary>
         static bool _MediaOpenOperation;
+        static bool _IsShuffleEnabled;
 
         /// <summary>
         /// 初始化Settings类的新实例
@@ -78,6 +79,16 @@ namespace LiveMusicLite.Services
                     _MediaOpenOperation = (bool)localSettings.Values["MediaOpenOperation"];
                     break;
             }
+            switch (localSettings.Values["IsShuffleEnabled"])
+            {
+                case null:
+                    _IsShuffleEnabled = false;
+                    localSettings.Values["IsShuffleEnabled"] = false;
+                    break;
+                default:
+                    _IsShuffleEnabled = (bool)localSettings.Values["IsShuffleEnabled"];
+                    break;
+            }
         }
 
         /// <summary>
@@ -118,7 +129,7 @@ namespace LiveMusicLite.Services
                 localSettings.Values["IsLoadMusicOnStartUp"] = value;
             }
         }
-        
+
         /// <summary>
         /// 设置中手动打开音乐文件操作的属性
         /// </summary>
@@ -129,6 +140,19 @@ namespace LiveMusicLite.Services
             {
                 _MediaOpenOperation = value;
                 localSettings.Values["MediaOpenOperation"] = value;
+            }
+        }
+
+        /// <summary>
+        /// 设置中是否随机播放音乐的属性
+        /// </summary>
+        public static bool IsShuffleEnabled
+        {
+            get => _IsShuffleEnabled;
+            set
+            {
+                _IsShuffleEnabled = value;
+                localSettings.Values["IsShuffleEnabled"] = value;
             }
         }
     }

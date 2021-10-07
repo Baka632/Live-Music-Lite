@@ -206,7 +206,7 @@ namespace LiveMusicLite
         /// <param name="e"></param>
         private void VolumeChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            MusicInfomation.MusicVolumeProperties = e.NewValue / 100;
+            MusicService.MusicVolumeProperties = e.NewValue / 100;
             if (MusicService.MediaPlayer.IsMuted)
             {
                 MusicService.MediaPlayer.IsMuted = false;

@@ -167,7 +167,7 @@ namespace LiveMusicLite.ViewModel
         public MainPageViewModel()
         {
             MusicService = new MusicService();
-            MusicInfomation = new MusicInfomation(MusicService);
+            MusicInfomation = new MusicInfomation();
             MuteCommand = new MediaCommand(MusicService, MediaCommandType.Mute);
             RepeatMusicCommand = new MediaCommand(MusicService, MediaCommandType.Repeat);
             RepeatMusicCommand.CommandExecuted += OnRepeatMusicCommandExecuted;
