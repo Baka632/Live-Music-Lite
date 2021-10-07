@@ -258,7 +258,7 @@
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                
+
                 <!--<TextBlock
                     x:Name="musicName"
                     Grid.Row="0"
@@ -267,23 +267,32 @@
                     Text="{x:Bind MusicInfomation.MusicTitleProperties, Mode=OneWay}"
                     TextAlignment="Center"
                     TextWrapping="Wrap" />-->
-                
-                <StackPanel x:Name="musicNameStackPanel" Grid.Row="0" HorizontalAlignment="Center" Width="200" PointerEntered="musicNameStackPanel_PointerEntered">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="{x:Bind musicNameInnerStackPanelHorizontalAlignment,Mode=OneWay}">
-                        <TextBlock x:Name="musicName" SizeChanged="musicName_SizeChanged" FontSize="18" Text="{x:Bind HandleText(MusicInfomation.MusicTitleProperties), Mode=OneWay}">
+
+                <StackPanel
+                    x:Name="musicNameStackPanel"
+                    Grid.Row="0"
+                    Width="200"
+                    HorizontalAlignment="Center"
+                    PointerEntered="musicNameStackPanel_PointerEntered">
+                    <StackPanel HorizontalAlignment="{x:Bind musicNameInnerStackPanelHorizontalAlignment, Mode=OneWay}" Orientation="Horizontal">
+                        <TextBlock
+                            x:Name="musicName"
+                            FontSize="18"
+                            SizeChanged="musicName_SizeChanged"
+                            Text="{x:Bind HandleText(MusicInfomation.MusicTitleProperties), Mode=OneWay}">
                             <TextBlock.RenderTransform>
                                 <TranslateTransform X="0" />
                             </TextBlock.RenderTransform>
                         </TextBlock>
                     </StackPanel>
                 </StackPanel>
-                
+
                 <TextBlock
                     x:Name="musicAlbumArtist"
                     Grid.Row="1"
+                    Width="250"
                     HorizontalAlignment="Center"
                     FontSize="16"
-                    Width="250"
                     FontWeight="Bold"
                     Text="{x:Bind MusicInfomation.MusicAlbumArtistProperties, Mode=OneWay}"
                     TextAlignment="Center"
@@ -319,9 +328,9 @@
 
             <Button
                 x:Name="openMusicButton"
+                Margin="0,0,5,0"
                 Command="{x:Bind ViewModel.OpenAndPlayMusicCommand}"
                 Content="&#xE1A5;"
-                Margin="0,0,5,0"
                 Style="{StaticResource ButtonFontIconStyle}" />
 
             <Button
@@ -382,18 +391,28 @@
                 </Button.Flyout>
             </Button>
 
-            <muxc:SplitButton Background="Transparent" Margin="5,0,0,0" Height="40">
+            <muxc:SplitButton Height="40" Margin="5,0,0,0" Background="Transparent">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{x:Bind playRateSelectionGridView.SelectedItem,Mode=OneWay}"/>
+                    <TextBlock Text="{x:Bind playRateSelectionGridView.SelectedItem, Mode=OneWay}" />
                 </StackPanel>
                 <muxc:SplitButton.Flyout>
                     <Flyout Placement="Bottom">
                         <StackPanel>
                             <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                                <FontIcon Margin="0,0,5,0" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEC57;" />
-                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="播放速度"/>
+                                <FontIcon
+                                    Margin="0,0,5,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                    Glyph="&#xEC57;" />
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="播放速度" />
                             </StackPanel>
-                            <GridView x:Name="playRateSelectionGridView" Padding="0" ItemClick="PlayRateSelectionChanged" SelectedIndex="1" IsItemClickEnabled="True">
+                            <GridView
+                                x:Name="playRateSelectionGridView"
+                                Padding="0"
+                                IsItemClickEnabled="True"
+                                ItemClick="PlayRateSelectionChanged"
+                                SelectedIndex="1">
                                 <x:String>0.5x</x:String>
                                 <x:String>1x</x:String>
                                 <x:String>1.5x</x:String>

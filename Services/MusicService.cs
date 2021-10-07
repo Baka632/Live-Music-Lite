@@ -206,8 +206,6 @@ namespace LiveMusicLite.Services
             MediaPlayer.PlaybackSession.PlaybackRate = rate;
         }
 
-        public void
-
         public void Dispose()
         {
             ((IDisposable)MediaPlayer).Dispose();
