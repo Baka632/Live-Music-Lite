@@ -2,6 +2,7 @@
 using LiveMusicLite.Helper;
 using LiveMusicLite.Models;
 using LiveMusicLite.Services;
+using LiveMusicLite.Views;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
@@ -31,14 +33,15 @@ namespace LiveMusicLite.ViewModel
         private string _RepeatButtonIconString = "\uE1CD";
         private string ShufflingMusicState = "随机播放:关";
         private string NowPlayingState = "暂停";
+        private bool IsMediaPlayingFailed = false;
         /// <summary>
         /// 指示鼠标指针是否在拖动进度条的值
         /// </summary>
-        public bool PointerEntered = false;
+        private bool PointerEntered = false;
         /// <summary>
         /// 新的进度条值
         /// </summary>
-        public double SliderNewValue;
+        private double SliderNewValue;
         /// <summary>
         /// 支持的音频格式数组
         /// </summary>
@@ -132,10 +135,7 @@ namespace LiveMusicLite.ViewModel
             }
         }
 
-        public bool IsMediaControlShowReverse
-        {
-            get => !IsMediaControlShow;
-        }
+        public bool IsMediaControlShowReverse => !IsMediaControlShow;
 
         private string _PausePlayingButtonIcon = "\uE102";
 
@@ -209,9 +209,24 @@ namespace LiveMusicLite.ViewModel
             VolumeGlyphState = new VolumeGlyphState(MusicService, MusicInfomation);
 
             MusicService.MediaPlaybackList.CurrentItemChanged += OnCurrentItemChanged;
+            MusicService.MediaPlaybackList.ItemFailed += OnMediaPlaybackListItemFailed;
             MusicService.MediaPlayer.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
             MusicService.MediaPlayer.PlaybackSession.NaturalDurationChanged += OnNaturalDurationChanged;
             MusicService.MediaPlayer.PlaybackSession.PositionChanged += OnPositionChanged;
+        }
+
+        private void OnMediaPlaybackListItemFailed(MediaPlaybackList sender, MediaPlaybackItemFailedEventArgs args)
+        {
+            IsMediaPlayingFailed = true;
+        }
+
+        private async Task ShowPlayingErrorDialog()
+        {
+            await RunOnMainThread(async () =>
+            {
+                MusicPlayingErrorDialog dialog = new MusicPlayingErrorDialog();
+                _ = await dialog.ShowAsync();
+            });
         }
 
         private void OnPositionChanged(MediaPlaybackSession sender, object args)
@@ -244,7 +259,7 @@ namespace LiveMusicLite.ViewModel
             MusicInfomation.MusicDurationProperties = sender.NaturalDuration.TotalSeconds;
         }
 
-        private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
+        private async void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
         {
             switch (sender.PlaybackState)
             {
@@ -255,6 +270,10 @@ namespace LiveMusicLite.ViewModel
                 case MediaPlaybackState.Paused:
                     NowPlayingProperties = "播放";
                     PausePlayingButtonIcon = "\uE102";
+                    if (IsMediaPlayingFailed)
+                    {
+                        await ShowPlayingErrorDialog();
+                    }
                     break;
                 case MediaPlaybackState.None:
                 case MediaPlaybackState.Opening:
@@ -331,8 +350,13 @@ namespace LiveMusicLite.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        public void OnProgressSliderPointerReleased()
+        public async void OnProgressSliderPointerReleased()
         {
+            if (IsMediaPlayingFailed)
+            {
+                await ShowPlayingErrorDialog();
+                return;
+            }
             MusicService.MediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
             TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
             PointerEntered = false;

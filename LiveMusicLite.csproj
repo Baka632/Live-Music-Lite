@@ -147,6 +147,9 @@
     <Compile Include="Services\MusicService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Settings.cs" />
+    <Compile Include="Views\MusicPlayingErrorDialog.xaml.cs">
+      <DependentUpon>MusicPlayingErrorDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\SettingsContentDialog.xaml.cs">
       <DependentUpon>SettingsContentDialog.xaml</DependentUpon>
     </Compile>
@@ -227,6 +230,10 @@
     <Page Include="Views\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\MusicPlayingErrorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\SettingsContentDialog.xaml">
       <SubType>Designer</SubType>
