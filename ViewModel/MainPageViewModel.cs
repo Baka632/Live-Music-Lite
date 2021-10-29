@@ -16,6 +16,8 @@ using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace LiveMusicLite.ViewModel
@@ -29,6 +31,14 @@ namespace LiveMusicLite.ViewModel
         private string _RepeatButtonIconString = "\uE1CD";
         private string ShufflingMusicState = "随机播放:关";
         private string NowPlayingState = "暂停";
+        /// <summary>
+        /// 指示鼠标指针是否在拖动进度条的值
+        /// </summary>
+        public bool PointerEntered = false;
+        /// <summary>
+        /// 新的进度条值
+        /// </summary>
+        public double SliderNewValue;
         /// <summary>
         /// 支持的音频格式数组
         /// </summary>
@@ -159,7 +169,10 @@ namespace LiveMusicLite.ViewModel
             set
             {
                 _ProcessSliderValue = value;
-                OnPropertiesChangedUsingMainThread();
+                if (PointerEntered != true)
+                {
+                    OnPropertiesChangedUsingMainThread();
+                }
             }
         }
 
@@ -204,12 +217,30 @@ namespace LiveMusicLite.ViewModel
         private void OnPositionChanged(MediaPlaybackSession sender, object args)
         {
             ProcessSliderValue = MusicService.MediaPlayer.PlaybackSession.Position.TotalSeconds;
-            TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+            if (PointerEntered)
+            {
+                return;
+            }
+            if (MusicService.MediaPlayer.PlaybackSession.Position.TotalSeconds >= 3600)
+            {
+                TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"h\:mm\:ss");
+            }
+            else
+            {
+                TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+            }
         }
 
         private void OnNaturalDurationChanged(MediaPlaybackSession sender, object args)
         {
-            MusicInfomation.MusicLenthProperties = sender.NaturalDuration.ToString(@"m\:ss");
+            if (sender.NaturalDuration.TotalSeconds >= 3600)
+            {
+                MusicInfomation.MusicLenthProperties = sender.NaturalDuration.ToString(@"h\:mm\:ss");
+            }
+            else
+            {
+                MusicInfomation.MusicLenthProperties = sender.NaturalDuration.ToString(@"m\:ss");
+            }
             MusicInfomation.MusicDurationProperties = sender.NaturalDuration.TotalSeconds;
         }
 
@@ -282,6 +313,44 @@ namespace LiveMusicLite.ViewModel
                     break;
                 default:
                     break;
+            }
+        }
+
+        /// <summary>
+        /// 开始拖拽进度条时调用的方法
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OnProgressSliderEnterPressedReleased()
+        {
+            PointerEntered = true;
+        }
+
+        /// <summary>
+        /// 结束拖拽进度条时调用的方法
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        public void OnProgressSliderPointerReleased()
+        {
+            MusicService.MediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
+            TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+            PointerEntered = false;
+        }
+
+        /// <summary>
+        /// 当进度条的值改变时调用的方法
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OnProcessSliderValueChanged(RangeBaseValueChangedEventArgs e)
+        {
+            SliderNewValue = e.NewValue;
+            if (PointerEntered)
+            {
+                TimeTextBlockText = e.NewValue >= 3600
+                    ? TimeSpan.FromSeconds(e.NewValue).ToString(@"h\:mm\:ss")
+                    : TimeSpan.FromSeconds(e.NewValue).ToString(@"m\:ss");
             }
         }
 

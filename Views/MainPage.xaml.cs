@@ -34,35 +34,26 @@ namespace LiveMusicLite
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
         /// <summary>
         /// 音乐信息的实例
         /// </summary>
-        MusicInfomation MusicInfomation;
+        private MusicInfomation MusicInfomation;
+
         /// <summary>
         /// 音乐服务的实例
         /// </summary>
-        MusicService MusicService;
-        /// <summary>
-        /// 计时器DispatcherTimer的实例
-        /// </summary>
-        DispatcherTimer dispatcherTimer;
+        private readonly MusicService MusicService;
+
         /// <summary>
         /// 在主界面上显示的音乐图片的列表
         /// </summary>
-        ObservableCollection<Image> musicImages = new ObservableCollection<Image>();
-        Storyboard _scrollAnimation;
+        private ObservableCollection<Image> musicImages = new ObservableCollection<Image>();
+
+        private Storyboard _scrollAnimation;
         private bool IsTextScrolling = false;
         private bool AllowTextScrolling = false;
         private HorizontalAlignment _musicNameInnerStackPanelHorizontalAlignment = HorizontalAlignment.Center;
-
-        /// <summary>
-        /// 新的进度条值
-        /// </summary>
-        public static double SliderNewValue;
-        /// <summary>
-        /// 指示鼠标指针是否在拖动进度条的值
-        /// </summary>
-        public static bool IsPointerEntered = false;
         internal MainPageViewModel ViewModel { get; }
 
         /// <summary>
@@ -70,18 +61,14 @@ namespace LiveMusicLite
         /// </summary>
         public MainPage()
         {
-            this.InitializeComponent();
             ViewModel = new MainPageViewModel();
+            this.InitializeComponent();
             MusicService = ViewModel.MusicService;
             MusicInfomation = ViewModel.MusicInfomation;
             App.MainPageViewModel = ViewModel;
 
-            MusicService.MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
             MusicService.MediaPlaybackList.CurrentItemChanged += MediaPlaybackList_CurrentItemChanged;
 
-            dispatcherTimer = new DispatcherTimer();
-            dispatcherTimer.Tick += dispatcherTimer_Tick;
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             processSlider.AddHandler(PointerReleasedEvent, new PointerEventHandler(UIElement_OnPointerReleased), true);
             processSlider.AddHandler(PointerPressedEvent, new PointerEventHandler(UIElement_EnterPressedReleased), true);
         }
@@ -112,7 +99,10 @@ namespace LiveMusicLite
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void UIElement_EnterPressedReleased(object sender, PointerRoutedEventArgs e) => IsPointerEntered = true;
+        private void UIElement_EnterPressedReleased(object sender, PointerRoutedEventArgs e)
+        {
+            ViewModel.OnProgressSliderEnterPressedReleased();
+        }
 
         /// <summary>
         /// 结束拖拽进度条时调用的方法
@@ -121,22 +111,17 @@ namespace LiveMusicLite
         /// <param name="args"></param>
         private void UIElement_OnPointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            MusicService.MediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
-            ViewModel.TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
-            IsPointerEntered = false;
+            ViewModel.OnProgressSliderPointerReleased();
         }
 
         /// <summary>
-        /// 当超过计时器间隔时调用的方法
+        /// 当进度条被拖动时调用的方法
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void dispatcherTimer_Tick(object sender, object e)
+        private void processSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (IsPointerEntered == false)
-            {
-                ViewModel.TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
-            }
+            ViewModel.OnProcessSliderValueChanged(e);
         }
 
         /// <summary>
@@ -149,54 +134,6 @@ namespace LiveMusicLite
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             });
-        }
-
-        /// <summary>
-        /// 当进度条被拖动时调用的方法
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void processSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-        {
-            SliderNewValue = e.NewValue;
-            if (IsPointerEntered)
-            {
-                ViewModel.TimeTextBlockText = TimeSpan.FromSeconds(e.NewValue).ToString(@"m\:ss");
-            }
-        }
-
-        /// <summary>
-        /// 当播放器播放状态发生改变时调用的方法
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        private async void PlaybackSession_PlaybackStateChanged(MediaPlaybackSession sender, object args)
-        {
-            switch (MusicService.MediaPlayer.PlaybackSession.PlaybackState)
-            {
-                case MediaPlaybackState.Playing:
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        if (dispatcherTimer.IsEnabled == false)
-                        {
-                            dispatcherTimer.Start();
-                        }
-                    });
-                    break;
-                case MediaPlaybackState.Paused:
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        if (MusicService.MediaPlaybackList.Items.Count == MusicService.MediaPlaybackList.CurrentItemIndex + 1 && processSlider.Value == processSlider.Maximum)
-                        {
-                            dispatcherTimer.Stop();
-                            processSlider.Value = 0;
-                            ViewModel.TimeTextBlockText = "0:00";
-                        }
-                    });
-                    break;
-                default:
-                    break;
-            }
         }
 
         /// <summary>

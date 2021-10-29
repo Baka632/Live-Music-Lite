@@ -508,7 +508,8 @@
                 <TextBlock
                     x:Name="musicNowPlayingTimeTextBlock"
                     Grid.Column="0"
-                    Margin="20,0,0,0"
+                    MinWidth="38"
+                    TextAlignment="Right"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     FontSize="12"
@@ -528,6 +529,8 @@
                     Value="{x:Bind ViewModel.ProcessSliderValue, Mode=OneWay}" />
                 <TextBlock
                     Grid.Column="2"
+                    MinWidth="38"
+                    TextAlignment="Right"
                     Margin="0,0,20,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
