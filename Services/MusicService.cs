@@ -170,6 +170,11 @@ namespace LiveMusicLite.Services
             MediaPlayer.Play();
         }
 
+        public void PauseMusic()
+        {
+            MediaPlayer.Pause();
+        }
+
         /// <summary>
         /// 控制是否随机播放音乐,如果现在的状态为false,则改为true,反之亦然
         /// </summary>

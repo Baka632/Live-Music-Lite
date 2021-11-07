@@ -1,23 +1,36 @@
 ﻿using LiveMusicLite.Models;
 using LiveMusicLite.Services;
+using LiveMusicLite.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Media.Playback;
 
 namespace LiveMusicLite.Commands
 {
     public class MediaCommand : DelegateCommand
     {
         public event Action<MediaCommandExecutedEventArgs> CommandExecuted;
+        private bool IsMediaPlayingFailed = false;
+        private bool IsMediaPlayingFailedDialogShow;
 
         public MediaCommand(MusicService musicService, MediaCommandType type)
         {
+            musicService.MediaPlaybackList.ItemFailed += OnMediaPlaybackListItemFailed;
             switch (type)
             {
                 case MediaCommandType.PlayAndPause:
-                    ExecuteAction = (object obj) => musicService.PlayPauseMusic();
+                    ExecuteAction = async (object obj) =>
+                    {
+                        if (IsMediaPlayingFailed)
+                        {
+                            await ShowPlayingErrorDialog();
+                            return;
+                        }
+                        musicService.PlayPauseMusic();
+                    };
                     break;
                 case MediaCommandType.Next:
                     ExecuteAction = (object obj) => musicService.NextMusic();
@@ -83,6 +96,23 @@ namespace LiveMusicLite.Commands
                 default:
                     break;
             }
+        }
+
+        private async Task ShowPlayingErrorDialog()
+        {
+            if (IsMediaPlayingFailedDialogShow)
+            {
+                return;
+            }
+            IsMediaPlayingFailedDialogShow = true;
+            MusicPlayingErrorDialog dialog = new MusicPlayingErrorDialog();
+            _ = await dialog.ShowAsync();
+            IsMediaPlayingFailedDialogShow = false;
+        }
+
+        private void OnMediaPlaybackListItemFailed(MediaPlaybackList sender, MediaPlaybackItemFailedEventArgs args)
+        {
+            IsMediaPlayingFailed = true;
         }
 
         public override void Execute(object parameter)

@@ -7,6 +7,7 @@
     xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
     xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="using:LiveMusicLite.Helper"
     xmlns:local="using:LiveMusicLite"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
@@ -450,7 +451,7 @@
                 <ToggleButton
                     x:Name="shuffleMusicToggleButton"
                     Content="&#xE14B;"
-                    IsChecked="{x:Bind ViewModel.MusicService.IsShuffleEnabled,Mode=TwoWay}"
+                    IsChecked="{x:Bind ViewModel.MusicService.IsShuffleEnabled, Mode=TwoWay}"
                     Style="{StaticResource ToggleButtonButtonFontIconStyle}"
                     ToolTipService.ToolTip="{x:Bind ViewModel.ShufflingMusicProperties, Mode=OneWay}" />
 
@@ -509,12 +510,12 @@
                     x:Name="musicNowPlayingTimeTextBlock"
                     Grid.Column="0"
                     MinWidth="38"
-                    TextAlignment="Right"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     FontSize="12"
                     Foreground="White"
-                    Text="{x:Bind ViewModel.TimeTextBlockText, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.TimeTextBlockText, Mode=OneWay}"
+                    TextAlignment="Right" />
                 <Slider
                     x:Name="processSlider"
                     Grid.Column="1"
@@ -530,13 +531,13 @@
                 <TextBlock
                     Grid.Column="2"
                     MinWidth="38"
-                    TextAlignment="Left"
                     Margin="0,0,20,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     FontSize="12"
                     Foreground="White"
-                    Text="{x:Bind MusicInfomation.MusicLenthProperties, Mode=OneWay}" />
+                    Text="{x:Bind MusicInfomation.MusicLenthProperties, Mode=OneWay}"
+                    TextAlignment="Left" />
             </StackPanel>
         </Grid>
 

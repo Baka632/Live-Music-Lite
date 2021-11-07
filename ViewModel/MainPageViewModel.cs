@@ -162,6 +162,7 @@ namespace LiveMusicLite.ViewModel
         }
 
         private double _ProcessSliderValue;
+        private bool IsMediaPlayingFailedDialogShow = false;
 
         public double ProcessSliderValue
         {
@@ -204,7 +205,7 @@ namespace LiveMusicLite.ViewModel
             };
             ChangePlayRateCommand = new MediaCommand(MusicService, MediaCommandType.ChangePlayRate);
             ShuffleMusicCommand.CommandExecuted += OnShuffleMusicCommandExecuted;
-            OpenAndPlayMusicCommand = new DelegateCommand() { ExecuteAction = async (object obj) => await OpenAndPlayMusicFile(obj) };
+            OpenAndPlayMusicCommand = new DelegateCommand() { ExecuteAction = async (object obj) => await OpenAndPlayMusicFile(obj)};
             FileService = new FileService();
             VolumeGlyphState = new VolumeGlyphState(MusicService, MusicInfomation);
 
@@ -224,8 +225,14 @@ namespace LiveMusicLite.ViewModel
         {
             await RunOnMainThread(async () =>
             {
+                if (IsMediaPlayingFailedDialogShow)
+                {
+                    return;
+                }
+                IsMediaPlayingFailedDialogShow = true;
                 MusicPlayingErrorDialog dialog = new MusicPlayingErrorDialog();
                 _ = await dialog.ShowAsync();
+                IsMediaPlayingFailedDialogShow = false;
             });
         }
 
@@ -350,13 +357,8 @@ namespace LiveMusicLite.ViewModel
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        public async void OnProgressSliderPointerReleased()
+        public void OnProgressSliderPointerReleased()
         {
-            if (IsMediaPlayingFailed)
-            {
-                await ShowPlayingErrorDialog();
-                return;
-            }
             MusicService.MediaPlayer.PlaybackSession.Position = TimeSpan.FromSeconds(SliderNewValue);
             TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
             PointerEntered = false;
