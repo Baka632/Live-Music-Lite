@@ -249,5 +249,15 @@ namespace LiveMusicLite
         {
             ViewModel.ChangePlayRateCommand.Execute(e.ClickedItem);
         }
+
+        private void OnMusicDragOver(object sender, DragEventArgs e)
+        {
+            ViewModel.OnMusicDragOver(e);
+        }
+
+        private void OnMusicDrop(object sender, DragEventArgs e)
+        {
+            ViewModel.OnMusicDrop(e);
+        }
     }
 }

@@ -118,12 +118,10 @@ namespace LiveMusicLite.Services
             }
         }
 
-        public async Task GetMusicPropertiesAndPlayAysnc(IReadOnlyList<StorageFile> fileList, MediaPlaybackList playbackList)
+        public async Task GetMusicPropertiesAndPlayAysnc(IEnumerable<StorageFile> fileList, MediaPlaybackList playbackList)
         {
-            for (int i = 0; i < fileList.Count; i++)
+            foreach (var file in fileList)
             {
-                StorageFile file = fileList[i];
-
                 MusicProperties musicProperties = await file.Properties.GetMusicPropertiesAsync();
 
                 if (string.IsNullOrWhiteSpace(musicProperties.Artist))
@@ -141,7 +139,7 @@ namespace LiveMusicLite.Services
                     musicProperties.Album = "未知专辑";
                 }
 
-                MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(fileList[i]));
+                MediaPlaybackItem mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(file));
                 MediaItemDisplayProperties props = mediaPlaybackItem.GetDisplayProperties();
                 props.Type = Windows.Media.MediaPlaybackType.Music;
                 props.MusicProperties.Title = musicProperties.Title;

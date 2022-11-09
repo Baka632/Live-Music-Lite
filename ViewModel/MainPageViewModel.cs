@@ -10,6 +10,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation.Metadata;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -47,7 +49,7 @@ namespace LiveMusicLite.ViewModel
         /// </summary>
         private static readonly string[] SupportedAudioFormats = new string[]
         {
-            ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3",
+            ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3", ".mid",".midi",
         };
 
         public MusicService MusicService { get; }
@@ -301,8 +303,12 @@ namespace LiveMusicLite.ViewModel
                 MusicInfomation.MusicTitleProperties = currentMusicInfomation.Title;
                 MusicInfomation.MusicAlbumProperties = currentMusicInfomation.AlbumTitle;
                 await RunOnMainThread(async () => await WorkOnMainThread(musicThumbnail));
-                _ = await FileService.CreateMusicAlbumCoverFile(currentMusicInfomation.AlbumTitle, musicThumbnail);
-                await SetTileSourceAsync();
+
+                if (!ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract",12,0))
+                {
+                    _ = await FileService.CreateMusicAlbumCoverFile(currentMusicInfomation.AlbumTitle, musicThumbnail);
+                    await SetTileSourceAsync();
+                }
             }
             else
             {
@@ -383,8 +389,8 @@ namespace LiveMusicLite.ViewModel
         private async Task OpenAndPlayMusicFile(object storageFile = null)
         {
             bool IsUsingFilePicker = false;
-            IReadOnlyList<StorageFile> fileList;
-            if (storageFile is IReadOnlyList<StorageFile> storageFiles)
+            IEnumerable<StorageFile> fileList;
+            if (storageFile is IEnumerable<StorageFile> storageFiles)
             {
                 fileList = storageFiles;
             }
@@ -404,7 +410,7 @@ namespace LiveMusicLite.ViewModel
                 fileList = await MusicPicker.PickMultipleFilesAsync();
             }
 
-            if (fileList.Count > 0)
+            if (fileList.Any())
             {
                 if (IsMediaControlShow != true)
                 {
@@ -489,6 +495,54 @@ namespace LiveMusicLite.ViewModel
                                      MusicInfomation.MusicAlbumArtistProperties,
                                      MusicInfomation.MusicAlbumProperties,
                                      false);
+                }
+            }
+        }
+
+        public void OnMusicDragOver(DragEventArgs e)
+        {
+            var deferral = e.GetDeferral();
+            e.DragUIOverride.Caption = "播放";
+            DataPackageView dataview = e.DataView;
+            if (dataview.Contains(StandardDataFormats.StorageItems))
+            {
+                e.AcceptedOperation = DataPackageOperation.Copy;
+            }
+            else
+            {
+                e.AcceptedOperation = DataPackageOperation.None;
+            }
+            deferral.Complete();
+        }
+
+        public async void OnMusicDrop(DragEventArgs e)
+        {
+            var defer = e.GetDeferral();
+            try
+            {
+                DataPackageView dpv = e.DataView;
+                await Task.Run(() =>
+                {
+                    GetFiles(dpv);
+                });
+            }
+            finally
+            {
+                defer.Complete();
+            }
+
+            async void GetFiles(DataPackageView dpv)
+            {
+                if (dpv.Contains(StandardDataFormats.StorageItems))
+                {
+                    IEnumerable<IStorageItem> files = await dpv.GetStorageItemsAsync();
+                    await RunOnMainThread(async () =>
+                    {
+                        await OpenAndPlayMusicFile(
+                            from IStorageItem file in files.AsParallel()
+                            where file.IsOfType(StorageItemTypes.File) && (file as StorageFile).ContentType == "audio/mpeg"
+                            select file as StorageFile);
+                    });
                 }
             }
         }
