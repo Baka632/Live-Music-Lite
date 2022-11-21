@@ -49,7 +49,7 @@ namespace LiveMusicLite.ViewModel
         /// </summary>
         private static readonly string[] SupportedAudioFormats = new string[]
         {
-            ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3", ".mid",".midi",
+            ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3", ".m4a",
         };
 
         public MusicService MusicService { get; }
@@ -386,7 +386,7 @@ namespace LiveMusicLite.ViewModel
             }
         }
 
-        private async Task OpenAndPlayMusicFile(object storageFile = null)
+        private async Task OpenAndPlayMusicFile(object storageFile = null, bool isDrag = false)
         {
             bool IsUsingFilePicker = false;
             IEnumerable<StorageFile> fileList;
@@ -417,7 +417,7 @@ namespace LiveMusicLite.ViewModel
                     IsMediaControlShow = true;
                 }
 
-                if (Settings.MediaOpenOperation && IsUsingFilePicker != true)
+                if (Settings.MediaOpenOperation && !IsUsingFilePicker && !isDrag)
                 {
                     MusicInfomation.ResetAllMusicProperties();
                     if (MusicService.MediaPlaybackList.Items != null)
@@ -538,10 +538,10 @@ namespace LiveMusicLite.ViewModel
                     IEnumerable<IStorageItem> files = await dpv.GetStorageItemsAsync();
                     await RunOnMainThread(async () =>
                     {
-                        await OpenAndPlayMusicFile(
-                            from IStorageItem file in files.AsParallel()
-                            where file.IsOfType(StorageItemTypes.File) && (file as StorageFile).ContentType == "audio/mpeg"
-                            select file as StorageFile);
+                        var storageFiles = from IStorageItem file in files
+                                   where file.IsOfType(StorageItemTypes.File) && (file as StorageFile).ContentType.Contains("audio")
+                                   select file as StorageFile;
+                        await OpenAndPlayMusicFile(storageFiles, true);
                     });
                 }
             }

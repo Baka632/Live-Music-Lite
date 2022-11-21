@@ -241,11 +241,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Melanchall.DryWetMidi">
-      <Version>6.1.2</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.12</Version>
+      <Version>6.2.14</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp">
       <Version>2.1.1</Version>
@@ -257,13 +254,8 @@
       <Version>2.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.UI.Xaml">
-      <Version>2.7.0</Version>
+      <Version>2.7.3</Version>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <SDKReference Include="Microsoft.Midi.GmDls, Version=10.0.15063.0">
-      <Name>Microsoft General MIDI DLS for Universal Windows Apps</Name>
-    </SDKReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
