@@ -54,6 +54,12 @@
               <uap:FileType>.mp3</uap:FileType>
               <uap:FileType>.wma</uap:FileType>
               <uap:FileType>.wav</uap:FileType>
+              <uap:FileType>.aac</uap:FileType>
+              <uap:FileType>.adt</uap:FileType>
+              <uap:FileType>.adts</uap:FileType>
+              <uap:FileType>.ac3</uap:FileType>
+              <uap:FileType>.ec3</uap:FileType>
+              <uap:FileType>.m4a</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
