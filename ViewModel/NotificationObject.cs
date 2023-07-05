@@ -31,7 +31,7 @@ namespace LiveMusicLite.ViewModel
             await RunOnMainThread(() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)));
         }
 
-        private async Task RunOnMainThread(DispatchedHandler handler, CoreDispatcherPriority priority = CoreDispatcherPriority.Normal)
+        public async Task RunOnMainThread(DispatchedHandler handler, CoreDispatcherPriority priority = CoreDispatcherPriority.Normal)
         {
             await Dispatcher.RunAsync(priority, handler);
         }

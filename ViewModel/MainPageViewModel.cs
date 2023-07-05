@@ -6,6 +6,7 @@ using LiveMusicLite.Views;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,8 @@ using Windows.Foundation.Metadata;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.Storage.Search;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
@@ -22,6 +25,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace LiveMusicLite.ViewModel
@@ -49,7 +53,7 @@ namespace LiveMusicLite.ViewModel
         /// </summary>
         private static readonly string[] SupportedAudioFormats = new string[]
         {
-            ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3", ".m4a",
+            ".mp3", ".wav", ".wma", ".aac", ".adt", ".adts", ".ac3", ".ec3", ".m4a", ".mid"
         };
 
         public MusicService MusicService { get; }
@@ -179,7 +183,6 @@ namespace LiveMusicLite.ViewModel
             }
         }
 
-
         public MainPageViewModel()
         {
             MusicService = new MusicService();
@@ -196,6 +199,7 @@ namespace LiveMusicLite.ViewModel
                 ExecuteAction = (object obj) =>
                 {
                     IsMediaControlShow = false;
+                    IsMediaPlayingFailed = false;
                     MusicService.StopMusic();
                     MusicInfomation.ResetAllMusicProperties();
                     TileHelper.DeleteTile();
@@ -211,6 +215,7 @@ namespace LiveMusicLite.ViewModel
             FileService = new FileService();
             VolumeGlyphState = new VolumeGlyphState(MusicService, MusicInfomation);
 
+            PlayPauseMusicCommand.CommandExecuted += OnPlayPauseMusicCommandExecuted;
             MusicService.MediaPlaybackList.CurrentItemChanged += OnCurrentItemChanged;
             MusicService.MediaPlaybackList.ItemFailed += OnMediaPlaybackListItemFailed;
             MusicService.MediaPlayer.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
@@ -218,9 +223,18 @@ namespace LiveMusicLite.ViewModel
             MusicService.MediaPlayer.PlaybackSession.PositionChanged += OnPositionChanged;
         }
 
-        private void OnMediaPlaybackListItemFailed(MediaPlaybackList sender, MediaPlaybackItemFailedEventArgs args)
+        private async void OnPlayPauseMusicCommandExecuted(MediaCommandExecutedEventArgs obj)
+        {
+            if (IsMediaPlayingFailed)
+            {
+                await ShowPlayingErrorDialog();
+            }
+        }
+
+        private async void OnMediaPlaybackListItemFailed(MediaPlaybackList sender, MediaPlaybackItemFailedEventArgs args)
         {
             IsMediaPlayingFailed = true;
+            await ShowPlayingErrorDialog();
         }
 
         private async Task ShowPlayingErrorDialog()
@@ -240,18 +254,18 @@ namespace LiveMusicLite.ViewModel
 
         private void OnPositionChanged(MediaPlaybackSession sender, object args)
         {
-            ProcessSliderValue = MusicService.MediaPlayer.PlaybackSession.Position.TotalSeconds;
+            ProcessSliderValue = sender.Position.TotalSeconds;
             if (PointerEntered)
             {
                 return;
             }
-            if (MusicService.MediaPlayer.PlaybackSession.Position.TotalSeconds >= 3600)
+            if (sender.Position.TotalSeconds >= 3600)
             {
-                TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"h\:mm\:ss");
+                TimeTextBlockText = sender.Position.ToString(@"h\:mm\:ss");
             }
             else
             {
-                TimeTextBlockText = MusicService.MediaPlayer.PlaybackSession.Position.ToString(@"m\:ss");
+                TimeTextBlockText = sender.Position.ToString(@"m\:ss");
             }
         }
 
@@ -268,7 +282,7 @@ namespace LiveMusicLite.ViewModel
             MusicInfomation.MusicDurationProperties = sender.NaturalDuration.TotalSeconds;
         }
 
-        private async void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
+        private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
         {
             switch (sender.PlaybackState)
             {
@@ -279,10 +293,6 @@ namespace LiveMusicLite.ViewModel
                 case MediaPlaybackState.Paused:
                     NowPlayingProperties = "播放";
                     PausePlayingButtonIcon = "\uE102";
-                    if (IsMediaPlayingFailed)
-                    {
-                        await ShowPlayingErrorDialog();
-                    }
                     break;
                 case MediaPlaybackState.None:
                 case MediaPlaybackState.Opening:
@@ -294,6 +304,8 @@ namespace LiveMusicLite.ViewModel
 
         private async void OnCurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
+            IsMediaPlayingFailed = false;
+
             if (MusicService.MediaPlaybackList.CurrentItem != null)
             {
                 MusicDisplayProperties currentMusicInfomation = MusicService.MediaPlaybackList.CurrentItem.GetDisplayProperties().MusicProperties;
@@ -304,11 +316,8 @@ namespace LiveMusicLite.ViewModel
                 MusicInfomation.MusicAlbumProperties = currentMusicInfomation.AlbumTitle;
                 await RunOnMainThread(async () => await WorkOnMainThread(musicThumbnail));
 
-                if (!ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract",12,0))
-                {
-                    _ = await FileService.CreateMusicAlbumCoverFile(currentMusicInfomation.AlbumTitle, musicThumbnail);
-                    await SetTileSourceAsync();
-                }
+                _ = await FileService.CreateMusicAlbumCoverFile(currentMusicInfomation.AlbumTitle, musicThumbnail);
+                await SetTileSourceAsync();
             }
             else
             {
@@ -547,15 +556,55 @@ namespace LiveMusicLite.ViewModel
             }
         }
 
-        private async Task RunOnMainThread(DispatchedHandler handler, CoreDispatcherPriority priority = CoreDispatcherPriority.Normal)
+        public async void GetMusicImages(ObservableCollection<BitmapImage> bitmapImages)
         {
-            await Dispatcher.RunAsync(priority, handler);
+            await Task.Run(async () =>
+            {
+                StorageFolder musicFolder = KnownFolders.MusicLibrary;
+                //List<StorageFile> list = (await musicFolder.GetFilesAsync(CommonFileQuery.OrderByName))
+                //    .Where((file) => file.ContentType == "audio/mpeg")
+                //    .Distinct(new MusicFileComparer())
+                //    .ToList();
+                StorageFile[] list = (await musicFolder.GetFilesAsync(CommonFileQuery.OrderByName))
+                    .Where((file) => file.ContentType == "audio/mpeg")
+                    .Shuffle()
+                    .Take(200)
+                    .DistinctBy((file) => file.Properties.GetMusicPropertiesAsync().AsTask().Result.Album)
+                    .ToArray();
+                int count = list.Length;
+                int selectedFileCount = count >= 72 ? 72 : count;
+                foreach (var file in list)
+                {
+                    using (InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream())
+                    {
+                        StorageItemThumbnail thumbnail = await file.GetScaledImageAsThumbnailAsync(ThumbnailMode.SingleItem);
+                        await RandomAccessStream.CopyAsync(thumbnail, randomAccessStream);
+                        thumbnail.Dispose();
+
+                        randomAccessStream.Seek(0);
+                        BitmapImage bitmapImage = null;
+                        await RunOnMainThread(async () =>
+                        {
+                            bitmapImage = new BitmapImage();
+                            await bitmapImage.SetSourceAsync(randomAccessStream);
+                            bitmapImages.Add(bitmapImage);
+                        });
+                    }
+                }
+            });
         }
     }
 
-    internal static class IReadOnlyListExtension
+    internal static class IEnumableExtension
     {
-        public static int IndexOf<T>(this IReadOnlyList<T> self, T elementToFind)
+        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
+        {
+            return source.OrderBy(i => random.Next());
+        }
+
+        [ThreadStatic] private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
+
+        public static int IndexOf<T>(this IEnumerable<T> self, T elementToFind)
         {
             int i = 0;
             foreach (T element in self)
@@ -568,6 +617,19 @@ namespace LiveMusicLite.ViewModel
                 i++;
             }
             return -1;
+        }
+
+
+        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+        {
+            HashSet<TKey> seenKeys = new HashSet<TKey>();
+            foreach (TSource element in source)
+            {
+                if (seenKeys.Add(keySelector(element)))
+                {
+                    yield return element;
+                }
+            }
         }
     }
 }

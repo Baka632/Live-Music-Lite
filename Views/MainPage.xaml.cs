@@ -38,7 +38,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 音乐信息的实例
         /// </summary>
-        private MusicInfomation MusicInfomation;
+        private readonly MusicInfomation MusicInfomation;
 
         /// <summary>
         /// 音乐服务的实例
@@ -48,7 +48,7 @@ namespace LiveMusicLite
         /// <summary>
         /// 在主界面上显示的音乐图片的列表
         /// </summary>
-        private ObservableCollection<Image> musicImages = new ObservableCollection<Image>();
+        private readonly ObservableCollection<BitmapImage> musicImages = new ObservableCollection<BitmapImage>();
 
         private Storyboard _scrollAnimation;
         private bool IsTextScrolling = false;
@@ -258,6 +258,12 @@ namespace LiveMusicLite
         private void OnMusicDrop(object sender, DragEventArgs e)
         {
             ViewModel.OnMusicDrop(e);
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            //For performance
+            //ViewModel.GetMusicImages(musicImages);
         }
     }
 }

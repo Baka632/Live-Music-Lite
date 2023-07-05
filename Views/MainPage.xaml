@@ -14,10 +14,14 @@
     xmlns:viewmodel="using:LiveMusicLite.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainPageViewModel}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded"
     mc:Ignorable="d">
     <Page.Resources>
         <ResourceDictionary>
-            <Style x:Key="ButtonFontIconStyle" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
+            <Style
+                x:Key="ButtonFontIconStyle"
+                BasedOn="{StaticResource ButtonRevealStyle}"
+                TargetType="Button">
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontSize" Value="17" />
@@ -25,17 +29,23 @@
                 <Setter Property="Width" Value="40" />
                 <Setter Property="Padding" Value="0" />
             </Style>
-            <Style x:Key="MediaControlButtonStyle" BasedOn="{StaticResource ButtonFontIconStyle}" TargetType="Button">
+            <Style
+                x:Key="MediaControlButtonStyle"
+                BasedOn="{StaticResource ButtonFontIconStyle}"
+                TargetType="Button">
                 <Setter Property="FontSize" Value="18" />
             </Style>
-            <Style x:Key="ToggleButtonButtonFontIconStyle" BasedOn="{StaticResource ToggleButtonRevealStyle}" TargetType="ToggleButton">
+            <Style
+                x:Key="ToggleButtonButtonFontIconStyle"
+                BasedOn="{StaticResource ToggleButtonRevealStyle}"
+                TargetType="ToggleButton">
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
                 <Setter Property="Foreground" Value="White" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontSize" Value="16" />
                 <Setter Property="Height" Value="40" />
                 <Setter Property="Width" Value="40" />
-                <Setter Property="CornerRadius" Value="4" />
+                <Windows10version1809:Setter Property="CornerRadius" Value="4" />
                 <Setter Property="Padding" Value="0" />
             </Style>
             <SolidColorBrush x:Key="ToggleButtonUncheckedCheckedIndeterminateBackground" Color="{ThemeResource SystemAccentColor}" />
@@ -55,7 +65,10 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Grid x:Name="RootGrid" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                            <Grid
+                                x:Name="RootGrid"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="{TemplateBinding CornerRadius}">
                                 <ContentPresenter
                                     x:Name="ContentPresenter"
                                     Padding="{TemplateBinding Padding}"
@@ -207,7 +220,8 @@
             ScrollViewer.HorizontalScrollBarVisibility="Hidden"
             ScrollViewer.HorizontalScrollMode="Disabled"
             ScrollViewer.VerticalScrollBarVisibility="Hidden"
-            ScrollViewer.VerticalScrollMode="Disabled">
+            ScrollViewer.VerticalScrollMode="Disabled"
+            Visibility="{x:Bind ViewModel.IsMediaControlShowReverse, Mode=OneWay}">
             <GridView.ItemContainerStyle>
                 <Style TargetType="GridViewItem">
                     <Setter Property="IsEnabled" Value="False" />
@@ -218,6 +232,15 @@
                     <ItemsWrapGrid x:Name="MaxItemsWrapGrid" Orientation="Horizontal" />
                 </ItemsPanelTemplate>
             </GridView.ItemsPanel>
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="BitmapImage">
+                    <Image
+                        Width="100"
+                        Height="100"
+                        Source="{x:Bind}"
+                        Stretch="UniformToFill" />
+                </DataTemplate>
+            </GridView.ItemTemplate>
         </GridView>
 
         <StackPanel
@@ -226,11 +249,17 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Visibility="{x:Bind ViewModel.IsMediaControlShowReverse, Mode=OneWay}">
-            <TextBlock FontSize="30" FontWeight="SemiBold" Text="播放一些音乐吧。" />
+            <TextBlock
+                FontSize="30"
+                FontWeight="SemiBold"
+                Text="播放一些音乐吧。" />
             <Button Margin="0,10,0,0" Command="{x:Bind ViewModel.OpenAndPlayMusicCommand}">
                 <Button.Content>
                     <StackPanel Orientation="Horizontal">
-                        <FontIcon Margin="0,0,5,0" FontFamily="Segoe MDL2 Assets" Glyph="&#xE1A5;" />
+                        <FontIcon
+                            Margin="0,0,5,0"
+                            FontFamily="Segoe MDL2 Assets"
+                            Glyph="&#xE1A5;" />
                         <TextBlock Text="打开音乐文件..." />
                     </StackPanel>
                 </Button.Content>
@@ -392,7 +421,10 @@
                 </Button.Flyout>
             </Button>
 
-            <muxc:SplitButton Height="40" Margin="5,0,0,0" Background="Transparent">
+            <muxc:SplitButton
+                Height="40"
+                Margin="5,0,0,0"
+                Background="Transparent">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Bind playRateSelectionGridView.SelectedItem, Mode=OneWay}" />
                 </StackPanel>
@@ -406,7 +438,10 @@
                                     VerticalAlignment="Center"
                                     FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                     Glyph="&#xEC57;" />
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="播放速度" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="播放速度" />
                             </StackPanel>
                             <GridView
                                 x:Name="playRateSelectionGridView"
@@ -427,13 +462,13 @@
 
 
         <Grid
-            DragOver="OnMusicDragOver"
-            Drop="OnMusicDrop"
-            AllowDrop="True"
             Grid.Row="1"
             Height="100"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Bottom"
+            AllowDrop="True"
+            DragOver="OnMusicDragOver"
+            Drop="OnMusicDrop"
             RequestedTheme="Dark">
             <Grid.Background>
                 <SolidColorBrush Color="{ThemeResource SystemAccentColorDark2}" />
@@ -480,7 +515,10 @@
                         <Windows10FallCreatorsUpdate:KeyboardAccelerator Key="P" Modifiers="Control" />
                     </Windows10FallCreatorsUpdate:Button.KeyboardAccelerators>
 
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="27" Glyph="{x:Bind ViewModel.PausePlayingButtonIcon, Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="27"
+                        Glyph="{x:Bind ViewModel.PausePlayingButtonIcon, Mode=OneWay}" />
                 </Button>
 
                 <Button
@@ -498,7 +536,10 @@
                     IsThreeState="True"
                     Style="{StaticResource ToggleButtonButtonFontIconStyle}"
                     ToolTipService.ToolTip="{x:Bind ViewModel.RepeatingMusicProperties, Mode=OneWay}">
-                    <FontIcon FontFamily="Segoe MDL2 Assets" FontSize="16" Glyph="{x:Bind ViewModel.RepeatButtonIconString, Mode=OneWay}" />
+                    <FontIcon
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="16"
+                        Glyph="{x:Bind ViewModel.RepeatButtonIconString, Mode=OneWay}" />
                 </ToggleButton>
             </StackPanel>
 

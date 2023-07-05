@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Commons.Music.Midi;
 using Microsoft.Toolkit.Uwp.Helpers;
+using Windows.Devices.Midi;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -18,35 +20,6 @@ namespace LiveMusicLite.Services
         public FileService()
         {
 
-        }
-
-        public async Task<string> CreateMusicAlbumCoverFile(string name, IRandomAccessStream stream)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentException($"“{nameof(name)}”不能为 null 或空。", nameof(name));
-            }
-
-            if (stream is null)
-            {
-                throw new ArgumentNullException(nameof(stream));
-            }
-
-            string fileName = name.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
-            StorageFolder folder = ApplicationData.Current.TemporaryFolder;
-            if (await folder.FileExistsAsync($"{fileName}.png"))
-            {
-                return (await folder.GetFileAsync($"{fileName}.png")).Path;
-            }
-            StorageFile file = await folder.CreateFileAsync($"{fileName}.png", CreationCollisionOption.OpenIfExists);
-            
-            Stream fileStream = (await file.OpenAsync(FileAccessMode.ReadWrite)).AsStreamForWrite();
-            Stream _stream = stream.AsStreamForRead();
-            _ = _stream.Seek(0, SeekOrigin.Begin);
-            await _stream.CopyToAsync(fileStream);
-            await fileStream.FlushAsync();
-            fileStream.Dispose();
-            return file.Path;
         }
 
         public async Task<IList<MediaPlaybackItem>> GetMusicPropertiesAysnc(IReadOnlyList<StorageFile> fileList)
@@ -175,6 +148,35 @@ namespace LiveMusicLite.Services
                 mediaPlaybackItem.ApplyDisplayProperties(props);
                 playbackList.Items.Add(mediaPlaybackItem);
             }
+        }
+
+        public async Task<string> CreateMusicAlbumCoverFile(string name, IRandomAccessStream stream)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException($"“{nameof(name)}”不能为 null 或空。", nameof(name));
+            }
+
+            if (stream is null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            string fileName = name.Replace(":", string.Empty).Replace("/", string.Empty).Replace("\\", string.Empty).Replace("?", string.Empty).Replace("*", string.Empty).Replace("|", string.Empty).Replace("\"", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
+            StorageFolder folder = ApplicationData.Current.TemporaryFolder;
+            if (await folder.FileExistsAsync($"{fileName}.png"))
+            {
+                return (await folder.GetFileAsync($"{fileName}.png")).Path;
+            }
+            StorageFile file = await folder.CreateFileAsync($"{fileName}.png", CreationCollisionOption.OpenIfExists);
+
+            Stream fileStream = (await file.OpenAsync(FileAccessMode.ReadWrite)).AsStreamForWrite();
+            Stream _stream = stream.AsStreamForRead();
+            _ = _stream.Seek(0, SeekOrigin.Begin);
+            await _stream.CopyToAsync(fileStream);
+            await fileStream.FlushAsync();
+            fileStream.Dispose();
+            return file.Path;
         }
     }
 }
